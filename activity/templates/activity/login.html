@@ -1,0 +1,38 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login / Registrazione</title>
+    <link rel="stylesheet" href="{% static 'activity/login.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2 id="form-title">Login</h2>
+
+            <form id="auth-form" action="{% url 'login' %}" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <!--<input type="email" placeholder="Email" required>
+                <input type="password" placeholder="Password" required>
+
+                <div id="confirm-password-field" class="hidden">
+                    <input type="password" placeholder="Conferma Password" required>
+                </div>-->
+
+                <button type="submit" class="auth-button">Entra</button>
+            </form>
+
+            <p class="toggle-text">
+                Non hai un account?
+                <a href="{% url 'register' %}" id="toggle-link">Registrati</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciprocal Learning</title>
+    <link rel="stylesheet" href="{% static 'activity/members.css' %}">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+        <div class="account-text">Account</div>
+        <a href="{% url 'logout' %}">
+           <button class="back-button">Logout</button>
+        </a>
+
+    </aside>
+
+    <main class="main-content">
+        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Membri</h1>
+
+        <form action="{% url 'create_class' %}" method="POST">
+           {% csrf_token %}
+           {{ form.as_p }}
+
+           {% if users %}
+           <div class="list">
+           {% for username in users %}
+            <div class="list-item">{{ username.0 }}, {{ username.1 }}</div>
+           {% endfor %}
+           </div>
+           {% endif %}
+
+           {% if not group_id %}
+           <button class="back-button">{% if role == "2" %}Crea classe{% else %}Entra nella classe{% endif %}</button>   
+           {% elif role == "2" %}
+           <button class="back-button">Salva</button>
+           {% endif %}
+        </form>
+
+        <a href="{% url 'index' %}">
+            <button class="button-secondary">Annulla</button>
+        </a>
+    </main>
+
+</body>
+</html>
+
+

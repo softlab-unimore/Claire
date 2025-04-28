@@ -1,0 +1,42 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reciprocal Learning</title>
+    <link rel="stylesheet" href="{% static 'activity/members.css' %}">
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+        <div class="account-text">Account</div>
+        <a href="{% url 'logout' %}">
+           <button class="back-button">Logout</button>
+        </a>
+
+    </aside>
+
+    <main class="main-content">
+        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Nuova attività</h1>
+
+        <form action="{% url 'new_activity' %}" method="POST">
+           {% csrf_token %}
+           {{ form.as_p }}
+           {{ group_id }}
+           {{ activity_id }}
+           <input type="hidden" name="group_id" value="{{ group_id }}">
+           <input type="hidden" name="activity_id" value="{{ activity_id }}">
+           <button class="back-button">Salva</button>
+        </form>
+        <a href="{% url 'index' %}">
+        <button class="button-secondary">Annulla</button>
+        </a>
+
+    </main>
+
+</body>
+</html>

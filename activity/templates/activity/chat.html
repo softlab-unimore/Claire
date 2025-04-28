@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat - Reciprocal Learning</title>
+  <link rel="stylesheet" href="{% static 'activity/style.css' %}">
+  <link rel="stylesheet" href="{% static 'activity/chat.css' %}">
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+    <div class="account-text">Account</div>
+    <a href="{% url 'logout' %}">
+      <button class="back-button">Logout</button>
+    </a>
+  </aside>
+
+  <main class="main-content chat-page">
+    <h1 class="chat-title">Conversazione</h1>
+
+    <div class="chat-box" id="chat-box">
+      {% for message in messages %}
+        <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
+          <div class="message-content">{{ message.text }}</div>
+        </div>
+      {% empty %}
+        <p class="no-messages">Nessun messaggio</p>
+      {% endfor %}
+    </div>
+
+    <form class="chat-input-form" action="{% url 'chat' %}" method="POST">
+      {% csrf_token %}
+      <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." required></textarea>
+      <button type="submit" class="send-button">Invia</button>
+    </form>
+  </main>
+
+<script>
+  // Auto-scroll to the bottom on page load
+  const chatBox = document.getElementById('chat-box');
+  if (chatBox) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

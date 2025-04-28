@@ -1,0 +1,102 @@
+/* Chat Page Improvements */
+.chat-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.chat-title {
+    margin-bottom: 20px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #4c4c4c;
+}
+
+.chat-box {
+    flex: 1;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    overflow-y: auto;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.chat-message {
+    max-width: 70%;
+    padding: 14px 18px;
+    font-size: 15px;
+    border-radius: 18px;
+    word-break: break-word;
+    line-height: 1.4;
+    display: inline-block;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.user-message {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #9d6eff, #a87bff);
+    color: #ffffff;
+    border-bottom-right-radius: 6px;
+}
+
+.bot-message {
+    align-self: flex-start;
+    background: #f0e8ff;
+    color: #2c2c2c;
+    border-bottom-left-radius: 6px;
+}
+
+.no-messages {
+    text-align: center;
+    color: #aaa;
+    font-size: 14px;
+}
+
+.chat-input-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    border-radius: 16px;
+    padding: 10px 16px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.chat-input {
+    flex: 1;
+    padding: 14px 18px;
+    border-radius: 18px;
+    border: 1px solid #ddd;
+    font-size: 15px;
+    resize: none;
+    height: 48px;
+    background: #faf7ff;
+    outline: none;
+    box-shadow: none;
+    transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+    border-color: #a87bff;
+}
+
+.send-button {
+    background: linear-gradient(135deg, #9d6eff, #a87bff);
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    font-size: 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(157, 110, 255, 0.4);
+    transition: background 0.3s, transform 0.2s;
+}
+
+.send-button:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #a87bff, #b08dff);
+}

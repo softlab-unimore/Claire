@@ -1,0 +1,104 @@
+/* Base styles */
+body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: #faf7ff;
+    display: flex;
+    height: 100vh;
+}
+
+.back-button {
+    background: linear-gradient(135deg, #9d6eff, #a87bff);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
+    transition: background 0.3s, transform 0.2s;
+}
+
+
+/* Sidebar */
+.sidebar {
+    width: 70px;
+    background-color: #f3eaff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.account-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    margin-bottom: 8px;
+}
+
+.account-text {
+    font-size: 11px;
+    color: #6b6b6b;
+    text-align: center;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 30px 40px;
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c2c2c;
+    margin-bottom: 24px;
+}
+
+/* Class choice */
+.class-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.class-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.class-card:hover {
+    background-color: #f0e8ff;
+    transform: translateY(-2px);
+}
+
+.class-image {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-right: 14px;
+    border-radius: 14px;
+    padding: 8px;
+}
+
+.new-class .class-image {
+    background-color: #ffe1ec;
+}
+
+.existing-class .class-image {
+    background-color: #dedede;
+}
+
+.class-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: #3a3a3a;
+}
