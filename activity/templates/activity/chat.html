@@ -34,8 +34,10 @@
 
     <form class="chat-input-form" action="{% url 'chat' %}" method="POST">
       {% csrf_token %}
-      <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." required></textarea>
-      <button type="submit" class="send-button">Invia</button>
+        <input type="hidden" name="activity_id" value="{{ activity_id }}">
+        <input type="hidden" name="group_id" value="{{ group_id }}">
+      <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+      <button type="submit" class="send-button" {% if blocked %}disabled{% endif %}>Invia</button>
     </form>
   </main>
 
@@ -45,6 +47,53 @@
   if (chatBox) {
     chatBox.scrollTop = chatBox.scrollHeight;
   }
+  const stage = {{ stage }};
+  console.log(stage);
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // Define colors per stage
+    const stageColors = {
+        2: {
+            input: "#E0F7FA",      // light cyan
+            bot: "#B2EBF2",        // lighter blue
+            user: "#4DB6AC",
+            body: "#E0F2F1",       // very light teal
+            sidebar: "#B2DFDB",    // tealish sidebar
+        },
+        3: {
+            input: "#FFF9C4",      // light yellow
+            bot: "#FFF59D",
+            user: "#A5D6A7",
+            body: "#FFFDE7",
+            sidebar: "#FFECB3",
+        },
+        4: {
+            input: "#F8BBD0",      // light pink
+            bot: "#F48FB1",
+            user: "#CE93D8",
+            body: "#FCE4EC",
+            sidebar: "#F8BBD0",
+        },
+    };
+
+    const colors = stageColors[stage];
+    console.log("colors");
+    console.log(colors);
+    if (colors) {
+        console.log(document.querySelector(".chat-input"));
+        console.log("bot message");
+        console.log(document.querySelectorAll(".bot-message"));
+        document.querySelector(".chat-input")?.style.setProperty("background-color", colors.input);
+        document.querySelectorAll(".bot-message").forEach(el => el.style.setProperty("background-color", colors.bot));
+        document.querySelectorAll(".user-message").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".send-button").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".back-button").forEach(el => el.style.setProperty("background", colors.user));
+        console.log("send button");
+        console.log(document.querySelectorAll(".send-button"));
+        document.body.style.setProperty("background-color", colors.body);
+        document.querySelector(".sidebar")?.style.setProperty("background-color", colors.sidebar);
+    }
+});
 </script>
 
 </body>

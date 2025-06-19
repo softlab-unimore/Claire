@@ -1,11 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponseForbidden
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.contrib import messages
 from .forms import LoginForm, RegistrationForm, CreateClass, JoinClass, GetActivityForm, PostActivityForm
 from .models import Group, Activity
+from .methods import openaimodel
 from django.contrib.auth.decorators import login_required
+
+from .prompts.system_prompt import prompt as system_prompt
 
 def get_login(request):
    if request.method == "POST":
@@ -75,7 +77,7 @@ def create_class(request):
                else:
                   group = Group.objects.create(name=class_name, share_link=share_link)
             else:
-               group = Group.objects.get(userprofiles=request.user.userprofile, share_link=share_link)
+               group = Group.objects.get(share_link=share_link)
 
             if group == None:
                if not error:
@@ -113,8 +115,14 @@ def create_class(request):
 
 @login_required
 def index(request):
-   groups = Group.objects.filter(userprofiles=request.user.userprofile)
-   return render(request, "activity/index.html", {"role": request.user.userprofile.role, "groups": groups})
+    if "messages" in request.session:
+        del request.session["messages"]
+        request.session.modified = True
+    if "stage" in request.session:
+        del request.session["stage"]
+        request.session.modified = True
+    groups = Group.objects.filter(userprofiles=request.user.userprofile)
+    return render(request, "activity/index.html", {"role": request.user.userprofile.role, "groups": groups})
 
 @login_required
 def get_activity_page(request):
@@ -178,8 +186,75 @@ def get_new_activity(request):
 
 @login_required
 def get_chat(request):
-   first_message = {
-      "text": """Ciao! Sono qui per aiutarti a risolvere questo esercizio. In questa prima fase dell'esercizio, dato il titolo di una storia, dovrai fare delle previsioni su che cosa viene discusso all'interno della storia. Questo è il titolo: {titolo}.""",
-      "sender": "bot",
-   }
-   return render(request, "activity/chat.html", {"role": request.user.userprofile.role, "messages": [first_message]})
+    if request.method == "GET":
+        activity = get_object_or_404(Activity, id=request.GET["activity_id"])
+        if "messages" not in request.session or len(request.session["messages"]) == 0:
+            system_message = {
+                "text": system_prompt,
+                "sender": "system",
+            }
+            first_message = {
+               "text": f"""Ciao! Sono qui per aiutarti a risolvere questo esercizio. In questa prima fase dell'esercizio, dato il titolo di una storia, dovrai fare delle previsioni su che cosa viene discusso all'interno della storia. Questo è il titolo: {activity.name}.\nUser: """,
+               "sender": "bot",
+            }
+            request.session["messages"] = [system_message, first_message]
+            request.session["stage"] = 1
+        additional_context = {"group_id": request.GET["group_id"], "activity_id": request.GET["activity_id"]}
+    elif request.method == "POST" and request.session["stage"] < 4:
+        if "stage" not in request.session:
+            request.session["stage"] = 1
+
+        activity = get_object_or_404(Activity, id=request.POST["activity_id"])
+
+        request.session["messages"].append({
+            "text": request.POST["message"],
+            "sender": "user",
+        })
+        request.session.modified = True
+
+        is_next_stage = openaimodel.check_next_stage(
+            "\n".join([message["text"] for message in request.session["messages"]]),
+            request.session["stage"]
+        )
+
+        if is_next_stage:
+            request.session["stage"] += 1
+            text = f"\nOra siamo nella fase {request.session['stage']}.\nBot: "
+            request.session["messages"].append({
+                "text": text,
+                "sender": "system",
+            })
+            request.session.modified = True
+            if request.session["stage"] == 2:
+                text = f"\nQuesto è il testo completo dell'esercizio: {activity.text}\n\n"
+                request.session["messages"].append({
+                    "text": text,
+                    "sender": "bot",
+                })
+        else:
+            request.session["messages"][-1]["text"] += "\nBot: "
+        request.session.modified = True
+        bot_message = openaimodel.query("\n".join([message["text"]+"\n" for message in request.session["messages"]]))
+        request.session["messages"].append({
+            "text": bot_message+"\nUser: ",
+            "sender": "bot",
+        })
+        request.session.modified = True
+
+        additional_context = {"group_id": request.POST["group_id"], "activity_id": request.POST["activity_id"]}
+    else:
+        additional_context = {}
+
+    if request.session["stage"] >= 4:
+        blocked = True
+    else:
+        blocked = False
+
+    messages_to_send = [{
+        "text": message["text"].replace("Bot: ", "").replace("User: ", ""),
+        "sender": message["sender"],
+    } for message in request.session["messages"] if message["sender"] != "system"]
+
+    print(request.session["messages"])
+
+    return render(request, "activity/chat.html", {"role": request.user.userprofile.role, "messages": messages_to_send, "blocked": blocked, "stage": request.session["stage"]} | additional_context)

@@ -26,8 +26,6 @@
         <form action="{% url 'new_activity' %}" method="POST">
            {% csrf_token %}
            {{ form.as_p }}
-           {{ group_id }}
-           {{ activity_id }}
            <input type="hidden" name="group_id" value="{{ group_id }}">
            <input type="hidden" name="activity_id" value="{{ activity_id }}">
            <button class="back-button">Salva</button>

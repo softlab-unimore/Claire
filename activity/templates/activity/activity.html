@@ -51,7 +51,7 @@
 <form action="{% if role == "2" %}{% url 'new_activity' %}{% else %}{% url 'chat' %}{% endif %}" method="GET" style="display:inline;">
     {% csrf_token %}
     <input type="hidden" name="activity_id" value="{{ activity.id }}">
-    <input type="hidden" name="group_id" value="{{ group.id }}">
+    <input type="hidden" name="group_id" value="{{ group_id }}">
     <button type="submit" style="all: unset; width: 100%;">
         <div class="class-card existing-class">
             <img src="{% static 'activity/image0.png' %}" alt="Activity Icon" class="class-image">
