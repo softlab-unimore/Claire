@@ -12,28 +12,11 @@ load_dotenv()
 class OpenAIModel(BaseModel):
     model_name: str = Field(..., strict=True, description="Name of the openai model as per their official website")
     temperature: float = Field(0.00001, strict=True, description="The temperature of the model in between 0 and 1")
-    client: Any = OpenAI()
     max_retries: int = Field(50, strict=True, description="Number of retries in case of failed OpenAI API call")
 
     # @timeout_decorator.timeout(60, timeout_exception=StopIteration)
     def call_gpt(self, prompt: str) -> (str, dict):
-        completion = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"{prompt}"
-                    }
-                ],
-                temperature=self.temperature
-        )
-
-        metadata = {
-            "input_tokens": completion.usage.prompt_tokens,
-            "output_tokens": completion.usage.completion_tokens,
-        }
-
-        return completion.choices[0].message.content.lower() #, metadata
+        return 'messaggio ricevuto' #, metadata
 
     def extract_result(self, text: str) -> bool:
         response = text.lower().split("risposta finale:")[-1].strip()

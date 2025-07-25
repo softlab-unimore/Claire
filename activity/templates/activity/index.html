@@ -8,24 +8,24 @@
 <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
-<body>
+<body class="style">
 
-    <aside class="sidebar">
+    <aside class="sidebar-style">
         <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
         <div class="account-text">Account</div>
         <a href="{% url 'logout' %}">
-           <button class="back-button">Logout</button>
+           <button class="back-button-style">Logout</button>
         </a>
     </aside>
 
-    <main class="main-content">
-        <h1>Scelta classe</h1>
+    <main class="main-content-style">
+        <h1 class="style">Scelta classe</h1>
 
-        <section class="class-choice">
+        <section class="class-choice-style">
             <a href="{% url 'create_class' %}">
-            <div class="class-card new-class">
+            <div class="class-card new-class-style">
                 <img src="{% static 'activity/icon0.png' %}" alt="New Class Icon" class="class-image">
-                <div class="class-name">Nuova classe</div>
+                <div class="class-name-style">Nuova classe</div>
             </div>
             </a>
 {% for group in groups %}
@@ -33,9 +33,9 @@
     {% csrf_token %}
     <input type="hidden" name="group_id" value="{{ group.id }}">
     <button type="submit" style="all: unset; width: 100%;">
-        <div class="class-card existing-class">
+        <div class="class-card-style existing-class">
             <img src="{% static 'activity/image0.png' %}" alt="Class 1 Icon" class="class-image">
-            <div class="class-name">{{ group.name }}</div>
+            <div class="class-name-style">{{ group.name }}</div>
         </div>
     </button>
 </form>

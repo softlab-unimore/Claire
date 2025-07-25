@@ -198,7 +198,7 @@ def get_chat(request):
                "sender": "bot",
             }
             request.session["messages"] = [system_message, first_message]
-            request.session["stage"] = 1
+            request.session["stage"] = 4
         additional_context = {"group_id": request.GET["group_id"], "activity_id": request.GET["activity_id"]}
     elif request.method == "POST" and request.session["stage"] < 4:
         if "stage" not in request.session:
