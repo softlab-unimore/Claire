@@ -23,14 +23,12 @@
     <h1 class="chat-title-chat">Conversazione</h1>
 
     <div class="chat-box-wrapper">
+      <!-- LEFT SIDE: volume + progress -->
       <div class="chat-box-containter">
-  <!-- LEFT SIDE: volume + progress -->
-        <!--
+        <div class="chat-tools">
           <div class="chat-image-place">
             <img src="{% static 'activity/kid_reading.jpg' %}">
-        </div>-->
-
-      <div class="chat-tools">
+          </div>
           <div class="progress-bar" data-label="Progressione">
             <div class="progress-fill"></div>
           </div>
@@ -41,31 +39,18 @@
         </div>
       </div>
 
-
       <div class="chat-box-chat" id="chat-box">
         {% for message in messages %}
-          <div class="chat-message-chat {% if message.sender == 'user' %}user-message-chat{% else %}bot-message-chat{% endif %}">
-            <div class="message-content-chat">{{ message.text }}</div>
-          </div>
+        <div class="chat-message-chat {% if message.sender == 'user' %}user-message-chat{% else %}bot-message-chat{% endif %}">
+          <div class="message-content-chat">{{ message.text }}</div>
+        </div>
         {% empty %}
-          <p class="no-messages-chat">Nessun messaggio</p>
+        <p class="no-messages-chat">Nessun messaggio</p>
         {% endfor %}
       </div>
-    </div>
 
-
-<!--nuovi bottoni + progrss bar -->
-    <!--   <div class="w3-container w3-red w3-padding w3-center" style="height:24px;width:25%"> </div>-->
-<!--
-    <div class="progress-bar" data-label="Progressione">
-      <div class="progress-fill"></div>
+      <!-- qui finisce la chat-->
     </div>
-    <div>
-      <button class="volume-button-up" ></button>
-      <button class="volume-button-down"></button>
-    </div>
--->
-
     <form class="chat-input-form-chat" action="{% url 'chat' %}" method="POST">
       {% csrf_token %}
       <input type="hidden" name="activity_id" value="{{ activity_id }}">
@@ -95,11 +80,11 @@
             sidebar: "#B2DFDB",    // tealish sidebar
         },
         3: {
-            input: "#FFF9C4",      // light yellow
-            bot: "#FFF59D",
+            input: "#90ee90",      // light yellow -> now its light green
+            bot: "#9bf09b",
             user: "#A5D6A7",
-            body: "#FFFDE7",
-            sidebar: "#FFECB3",
+            body: "#defade",
+            sidebar: "#90ee90",
         },
         4: {
             input: "#F8BBD0",      // light pink

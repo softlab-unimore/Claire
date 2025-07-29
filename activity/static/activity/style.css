@@ -5,6 +5,7 @@ body.style {
     background-color: #faf7ff;
     display: flex;
     height: 100vh;
+
 }
 
 /*only for progress bar*/
@@ -75,7 +76,7 @@ body.style {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    background-color: #a87bff;
+    background-color: #9d6eff;
     /*background: linear-gradient(135deg, #9d6eff, #a87bff);*/
 }
 .volume-button-down{
@@ -87,11 +88,11 @@ body.style {
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
-    background-color: #a87bff;
+    background-color: #9d6eff;
 }
 .volume-button-up:hover,
 .volume-button-down:hover {
-    background-color: #dcdcdc; /*change the color when your cursor is on the button*/
+    background-color: #add8e6; /*change the color when your cursor is on the button*/
 }
 
 .chat-box-wrapper{
@@ -100,6 +101,20 @@ body.style {
     height: 100%;
     padding: 20px;
     /*flex-direction: row;*/
+}
+
+.chat-image-place {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.chat-image-place img{
+    width: 300px;
+    height: 300px;
+    border-radius: 20%;
+    object-fit: cover;
 }
 
 .chat-box-container {
@@ -112,23 +127,6 @@ body.style {
     padding: 16px;
     */
 }
-/*
-.chat-image-place{
-    background-image: url("/static/activity/kid_reading.png");
-}*/
-
-/*.chat-box-chat {
-    flex: 1;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-    overflow-y: auto;
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}*/
 
 .chat-tool {
     width: 140px;
@@ -138,18 +136,7 @@ body.style {
     gap: 24px;
     padding-top: 10px;
 }
-/* White rounded card */
-/*
-.chat-tools {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-}*/
+
 .chat-tool .progress-bar {
     width: 100%;
     height: 2em;
@@ -177,37 +164,6 @@ body.style {
 
 }
 
-/*
-width: 70px;
-    height: 35px;
-    font-size: 14px;
-    padding: 6px 0;
-    background: linear-gradient(135deg, #9d6eff, #a87bff);
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
-    transition: background 0.3s, transform 0.2s;
-    margin: 10px auto;
-    display: block;
-
-    width: 100%; /* Make it span the full sidebar width */
-/*    padding: 10px 0; /* Adjust padding to fit narrower sidebar */
-/*    font-size: 14px;
-    text-align: center;
-    background: linear-gradient(135deg, #9d6eff, #a87bff);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
-    transition: background 0.3s, transform 0.2s;
-    margin-top: auto; /* optional: stick it to the bottom */
-/*    margin-left: 0; /* prevent sticking out */
-/*    margin-right: 0;
-    box-sizing: border-box;*/
 
 /* Sidebar */
 .sidebar-style {
@@ -314,7 +270,7 @@ h1.chat-title-chat {
     padding: 20px;
     border-radius: 16px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
-    overflow-y: auto; /* check later */
+    overflow-y: auto;                           /* check later */
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
@@ -380,6 +336,7 @@ h1.chat-title-chat {
 .chat-input-chat:focus {
     border-color: #a87bff;
 }
+
 
 .send-button-chat {
     background: linear-gradient(135deg, #9d6eff, #a87bff);
@@ -519,8 +476,8 @@ h1.members {
 
 /* Back button */
 .back-button-members {
-    width: 70px;
-    height: 35px;
+    width: 80px;
+    height: 40px;
     font-size: 14px;
     padding: 7px 0;
     background: linear-gradient(135deg, #9d6eff, #a87bff);
@@ -533,36 +490,10 @@ h1.members {
     transition: background 0.3s, transform 0.2s;
     margin: 10px auto;
     display: block;
+    margin-left: 0px;
 }
-/*
-    background: linear-gradient(135deg, #9d6eff, #a87bff);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 15px;
-    border-radius: 25px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
-    transition: background 0.3s, transform 0.2s;
-*/
-/*
-    width: 100%; /* Make it span the full sidebar width */
-/*    padding: 10px 0; /* Adjust padding to fit narrower sidebar */
-/*    font-size: 14px;
-    text-align: center;
-    background: linear-gradient(135deg, #9d6eff, #a87bff);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
-    transition: background 0.3s, transform 0.2s;
-    margin-top: auto; /* optional: stick it to the bottom */
-/*    margin-left: 0; /* prevent sticking out */
-/*    margin-right: 0;
-    box-sizing: border-box;
+/**/
 
-*/
 
 .button-secondary-members {
     background: linear-gradient(135deg, #c8aaff, #d1b8ff);
