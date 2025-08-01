@@ -6,16 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chat - Reciprocal Learning</title>
   <link rel="stylesheet" href="{% static 'activity/style.css' %}">
-  <link rel="stylesheet" href="{% static 'activity/chat.css' %}">
+  <!--<link rel="stylesheet" href="{% static 'activity/chat.css' %}">-->
 </head>
 
-<body>
+<body class="style">
 
-  <aside class="sidebar">
-    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+  <aside class="sidebar-style">
+    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon-style">
     <div class="account-text">Account</div>
     <a href="{% url 'logout' %}">
-      <button class="back-button">Logout</button>
+      <button class="back-button-style">Logout</button>
     </a>
   </aside>
 
@@ -25,25 +25,44 @@
   </a>
   </div>
 
-  <main class="main-content chat-page">
-    <h1 class="chat-title">Conversazione</h1>
+  <main class="main-content-style chat-page-chat">
+    <h1 class="chat-title-chat">Conversazione</h1>
 
-    <div class="chat-box" id="chat-box">
-      {% for message in messages %}
-        <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
-          <div class="message-content">{{ message.text }}</div>
+    <div class="chat-box-wrapper">
+      <!-- LEFT SIDE: volume + progress -->
+      <div class="chat-box-containter">
+        <div class="chat-tools">
+          <div class="chat-image-place">
+            <img src="{% static 'activity/kid_reading.jpg' %}">
+          </div>
+          <div class="progress-bar" data-label="Progressione">
+            <div class="progress-fill"></div>
+          </div>
+          <div class="volume-buttons">
+            <button class="volume-button-up"></button>
+            <button class="volume-button-down"></button>
+          </div>
         </div>
-      {% empty %}
-        <p class="no-messages">Nessun messaggio</p>
-      {% endfor %}
-    </div>
+      </div>
 
-    <form class="chat-input-form" action="{% url 'chat' %}" method="POST">
+      <div class="chat-box-chat" id="chat-box">
+        {% for message in messages %}
+        <div class="chat-message-chat {% if message.sender == 'user' %}user-message-chat{% else %}bot-message-chat{% endif %}">
+          <div class="message-content-chat">{{ message.text }}</div>
+        </div>
+        {% empty %}
+        <p class="no-messages-chat">Nessun messaggio</p>
+        {% endfor %}
+      </div>
+
+      <!-- qui finisce la chat-->
+    </div>
+    <form class="chat-input-form-chat" action="{% url 'chat' %}" method="POST">
       {% csrf_token %}
-        <input type="hidden" name="activity_id" value="{{ activity_id }}">
-        <input type="hidden" name="group_id" value="{{ group_id }}">
-      <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
-      <button type="submit" class="send-button" {% if blocked %}disabled{% endif %}>Invia</button>
+      <input type="hidden" name="activity_id" value="{{ activity_id }}">
+      <input type="hidden" name="group_id" value="{{ group_id }}">
+      <textarea name="message" class="chat-input-chat" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+      <button type="submit" class="send-button-chat" {% if blocked %}disabled{% endif %}>Invia</button>
     </form>
   </main>
 
@@ -67,11 +86,11 @@
             sidebar: "#B2DFDB",    // tealish sidebar
         },
         3: {
-            input: "#FFF9C4",      // light yellow
-            bot: "#FFF59D",
+            input: "#90ee90",      // light yellow -> now its light green
+            bot: "#9bf09b",
             user: "#A5D6A7",
-            body: "#FFFDE7",
-            sidebar: "#FFECB3",
+            body: "#defade",
+            sidebar: "#90ee90",
         },
         4: {
             input: "#F8BBD0",      // light pink
@@ -86,18 +105,18 @@
     console.log("colors");
     console.log(colors);
     if (colors) {
-        console.log(document.querySelector(".chat-input"));
+        console.log(document.querySelector(".chat-input-chat"));
         console.log("bot message");
-        console.log(document.querySelectorAll(".bot-message"));
-        document.querySelector(".chat-input")?.style.setProperty("background-color", colors.input);
-        document.querySelectorAll(".bot-message").forEach(el => el.style.setProperty("background-color", colors.bot));
-        document.querySelectorAll(".user-message").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".send-button").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".back-button").forEach(el => el.style.setProperty("background", colors.user));
+        console.log(document.querySelectorAll(".bot-message-chat"));
+        document.querySelector(".chat-input-chat")?.style.setProperty("background-color", colors.input);
+        document.querySelectorAll(".bot-message-chat").forEach(el => el.style.setProperty("background-color", colors.bot));
+        document.querySelectorAll(".user-message-chat").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".send-button-chat").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".back-button-style").forEach(el => el.style.setProperty("background", colors.user));
         console.log("send button");
-        console.log(document.querySelectorAll(".send-button"));
+        console.log(document.querySelectorAll(".send-button-chat"));
         document.body.style.setProperty("background-color", colors.body);
-        document.querySelector(".sidebar")?.style.setProperty("background-color", colors.sidebar);
+        document.querySelector(".sidebar-style")?.style.setProperty("background-color", colors.sidebar);
     }
 });
 </script>

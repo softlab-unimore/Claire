@@ -1,5 +1,5 @@
-/* Base */
-body {
+/* Base Login css*/
+body.login {
     margin: 0;
     padding: 0px;
     font-family: 'Inter', 'Segoe UI', sans-serif;
@@ -11,7 +11,7 @@ body {
 }
 
 /* Container */
-.auth-container {
+.auth-container-login {
     margin-top: 0px;
     background: white;
     padding: 40px 30px;
@@ -21,7 +21,7 @@ body {
 }
 
 /* Title */
-.auth-card h2 {
+.auth-card-login h2 {
     text-align: center;
     margin-bottom: 24px;
     font-size: 24px;
@@ -30,12 +30,12 @@ body {
 }
 
 /* Form */
-form {
+form.login {
     display: flex;
     flex-direction: column;
 }
 
-input {
+input.login {
     padding: 8px;
     margin-bottom: 5px;
     border-radius: 8px;
@@ -45,12 +45,12 @@ input {
     transition: border 0.2s;
 }
 
-input:focus {
+input.login:focus {
     border-color: #a084dc;
 }
 
 /* Button */
-.auth-button {
+.auth-button-login {
     padding: 12px;
     background-color: #a084dc;
     color: white;
@@ -61,30 +61,30 @@ input:focus {
     transition: background 0.2s;
 }
 
-.auth-button:hover {
+.auth-button-login:hover {
     background-color: #8a6bd1;
 }
 
 /* Toggle text */
-.toggle-text {
+.toggle-text-login {
     text-align: center;
     margin-top: 18px;
     font-size: 14px;
     color: #6b6b6b;
 }
 
-.toggle-text a {
+.toggle-text-login a {
     color: #a084dc;
     text-decoration: none;
     font-weight: 500;
 }
 
-.toggle-text a:hover {
+.toggle-text-login a:hover {
     text-decoration: underline;
 }
 
 /* Hidden field */
-.hidden {
+.hidden-login {
     display: none;
 }
 
