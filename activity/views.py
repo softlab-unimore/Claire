@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from .forms import LoginForm, RegistrationForm, CreateClass, JoinClass, GetActivityForm, PostActivityForm
 from .models import Group, Activity, Dataset, UserActivity
 from .methods import openaimodel
-from .agent_from_csv import agent
+from .agent_from_csv import AgentFromCsv
 
 from django.contrib.auth.decorators import login_required
 
@@ -213,6 +213,7 @@ def get_new_activity(request):
 
 @login_required
 def get_chat(request):
+    agent = AgentFromCsv()
     if request.method == "GET":
         activity = get_object_or_404(Activity, id=request.GET["activity_id"])
     elif request.method == "POST":

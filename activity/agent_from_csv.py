@@ -14,21 +14,11 @@ from django.shortcuts import get_object_or_404
 
 class AgentFromCsv:
     def __init__(self):
-        self.csv_dir = "./activity/csvs/"
-        self.phase_path = "phases.csv"
-        self.criteria = "criteria.csv"
-        self.interaction = "interaction.csv"
-        self.logic = "logic.csv"
         attr = {
             "model_name": os.environ["OPENAI_MODEL_NAME"],
             "temperature": float(os.environ["OPENAI_TEMPERATURE"]),
         }
         self.model = OpenAIModel(**attr)
-
-        self.phases_df = pd.read_csv(os.path.join(self.csv_dir, self.phase_path))
-        self.criteria_df = pd.read_csv(os.path.join(self.csv_dir, self.criteria))
-        self.interaction_df = pd.read_csv(os.path.join(self.csv_dir, self.interaction))
-        self.logic_df = pd.read_csv(os.path.join(self.csv_dir, self.logic))
 
         self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
 
@@ -38,8 +28,10 @@ class AgentFromCsv:
             return True
         return False
 
-    def are_interactions_too_many(self, num_interactions):
-        if num_interactions >= self.max_num_interactions:
+    def are_interactions_too_many(self, activity, current_phase, num_interactions):
+        phases_df, _, _, _ = self.load_df(activity)
+        max_num_interactions = phases_df[phases_df["Fase"] == current_phase]["Numero interazioni massimo"]
+        if num_interactions >= max_num_interactions:
             return True
         return False
 
@@ -196,5 +188,3 @@ class AgentFromCsv:
             next_interaction_name = rows_logic["Interazione"]
 
         return next_interaction_name
-
-agent = AgentFromCsv()
