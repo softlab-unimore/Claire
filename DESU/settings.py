@@ -24,7 +24,7 @@ LOGIN_URL = '/activity/'
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-zeipyj(gv$rp6c)ub@3khn%^bw(2fs4e28k=+0!qk#(uwj+(lw'
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
