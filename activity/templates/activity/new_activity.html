@@ -6,32 +6,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reciprocal Learning</title>
-    <link rel="stylesheet" href="{% static 'activity/style.css' %}">
+    <link rel="stylesheet" href="{% static 'activity/members.css' %}">
 </head>
 
-<body class="members">
+<body>
 
-    <aside class="sidebar-members">
-        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon-members">
-        <div class="account-text-members">Account</div>
+    <aside class="sidebar">
+        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+        <div class="account-text">Account</div>
         <a href="{% url 'logout' %}">
-           <button class="back-button-members">Logout</button>
+           <button class="back-button">Logout</button>
         </a>
 
     </aside>
 
-    <main class="main-content-members">
-        <h1 class="">Classe 1 <span class="breadcrumb-members">&gt;</span> Nuova attività</h1>
+    <main class="main-content">
+        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Nuova attività</h1>
 
         <form action="{% url 'new_activity' %}" method="POST" enctype="multipart/form-data">
            {% csrf_token %}
            {{ form.as_p }}
            <input type="hidden" name="group_id" value="{{ group_id }}">
            <input type="hidden" name="activity_id" value="{{ activity_id }}">
-           <button class="back-button-members">Salva</button>
+           <button class="back-button">Salva</button>
         </form>
         <a href="{% url 'index' %}">
-        <button class="button-secondary-members">Annulla</button>
+        <button class="button-secondary">Annulla</button>
         </a>
 
     </main>

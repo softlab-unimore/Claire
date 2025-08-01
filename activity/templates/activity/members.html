@@ -9,41 +9,41 @@
     <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
-<body class="members">
+<body>
 
-    <aside class="sidebar-members">
-        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon-members">
-        <div class="account-text-members">Account</div>
+    <aside class="sidebar">
+        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+        <div class="account-text">Account</div>
         <a href="{% url 'logout' %}">
-           <button class="back-button-style">Logout</button>
+           <button class="back-button">Logout</button>
         </a>
 
     </aside>
 
-    <main class="main-content-members">
-        <h1 class="members">Classe 1 <span class="breadcrumb-members">&gt;</span> Membri</h1>
+    <main class="main-content">
+        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Membri</h1>
 
         <form action="{% url 'create_class' %}" method="POST">
            {% csrf_token %}
            {{ form.as_p }}
 
            {% if users %}
-           <div class="list-members">
+           <div class="list">
            {% for username in users %}
-            <div class="list-item-members">{{ username.0 }}, {{ username.1 }}</div>
+            <div class="list-item">{{ username.0 }}, {{ username.1 }}</div>
            {% endfor %}
            </div>
            {% endif %}
 
            {% if not group_id %}
-           <button class="back-button-members">{% if role == "2" %}Crea classe{% else %}Entra nella classe{% endif %}</button>
+           <button class="back-button">{% if role == "2" %}Crea classe{% else %}Entra nella classe{% endif %}</button>   
            {% elif role == "2" %}
-           <button class="back-button-members">Salva</button>
+           <button class="back-button">Salva</button>
            {% endif %}
         </form>
 
         <a href="{% url 'index' %}">
-            <button class="button-secondary-members">Annulla</button>
+            <button class="button-secondary">Annulla</button>
         </a>
     </main>
 

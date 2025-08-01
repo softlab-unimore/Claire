@@ -6,14 +6,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login / Registrazione</title>
-    <link rel="stylesheet" href="{% static 'activity/style.css' %}">
+    <link rel="stylesheet" href="{% static 'activity/login.css' %}">
 </head>
-<body class="login">
-    <div class="auth-container-login">
-        <div class="auth-card-login">
-            <h2 id="form-title" class="login">Login</h2>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2 id="form-title">Login</h2>
 
-            <form id="auth-form" action="{% url 'login' %}" method="POST" class="login" >
+            <form id="auth-form" action="{% url 'login' %}" method="POST">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <!--<input type="email" placeholder="Email" required>
@@ -23,10 +23,10 @@
                     <input type="password" placeholder="Conferma Password" required>
                 </div>-->
 
-                <button type="submit" class="auth-button-login">Entra</button>
+                <button type="submit" class="auth-button">Entra</button>
             </form>
 
-            <p class="toggle-text-login">
+            <p class="toggle-text">
                 Non hai un account?
                 <a href="{% url 'register' %}" id="toggle-link">Registrati</a>
             </p>

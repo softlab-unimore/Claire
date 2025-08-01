@@ -8,28 +8,28 @@
 <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
-<body class="style">
+<body>
 
-    <aside class="sidebar-style">
+    <aside class="sidebar">
         <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
-        <div class="account-text-style">Account</div>
+        <div class="account-text">Account</div>
         <a href="{% url 'logout' %}">
-           <button class="back-button-style">Logout</button>
+           <button class="back-button">Logout</button>
         </a>
 
     </aside>
 
-    <main class="main-content-style">
+    <main class="main-content">
         <h1>Classe 1 > Scelta attività</h1>
 
-        <section class="class-choice-style">
+        <section class="class-choice">
             <form action="{% url 'create_class' %}" method="GET" style="display: inline">
             {% csrf_token %}
             <input type="hidden" name="group_id" value="{{ group_id }}">
             <button type="submit" style="all: unset; width: 100%;">
-            <div class="class-card-style new-class">
+            <div class="class-card new-class">
                 <img src="{% static 'activity/icon0.png' %}" alt="New Class Icon" class="class-image">
-                <div class="class-name-style">{% if role == "2" %}Aggiungi e visualizza membri{% else %} Visualizza membri {% endif %}</div>
+                <div class="class-name">{% if role == "2" %}Aggiungi e visualizza membri{% else %} Visualizza membri {% endif %}</div>
             </div>
             </button>
             </form>
@@ -39,9 +39,9 @@
                {% csrf_token %}
                <input type="hidden" name="group_id" value="{{ group_id }}">
                <button type="submit" style="all: unset; width: 100%;">
-                  <div class="class-card-style existing-class">
+                  <div class="class-card existing-class">
                      <img src="{% static 'activity/icon0.png' %}" alt="Class 1 Icon" class="class-image">
-                     <div class="class-name-style">Nuova attività</div>
+                     <div class="class-name">Nuova attività</div>
                   </div>
                </button>
             </form>
@@ -53,9 +53,9 @@
     <input type="hidden" name="activity_id" value="{{ activity.id }}">
     <input type="hidden" name="group_id" value="{{ group_id }}">
     <button type="submit" style="all: unset; width: 100%;">
-        <div class="class-card-style existing-class">
+        <div class="class-card existing-class">
             <img src="{% static 'activity/image0.png' %}" alt="Activity Icon" class="class-image">
-            <div class="class-name-style">{{ activity.name }}</div>
+            <div class="class-name">{{ activity.name }}</div>
         </div>
     </button>
 </form>

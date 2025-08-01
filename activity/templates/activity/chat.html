@@ -6,65 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chat - Reciprocal Learning</title>
   <link rel="stylesheet" href="{% static 'activity/style.css' %}">
-  <!--<link rel="stylesheet" href="{% static 'activity/chat.css' %}">-->
+  <link rel="stylesheet" href="{% static 'activity/chat.css' %}">
 </head>
 
-<body class="style">
+<body>
 
-  <aside class="sidebar-style">
-    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon-style">
+  <aside class="sidebar">
+    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
     <div class="account-text">Account</div>
     <a href="{% url 'logout' %}">
-      <button class="back-button-style">Logout</button>
+      <button class="back-button">Logout</button>
     </a>
   </aside>
 
-  <div style="text-align: right; margin: 1em 0;">
-  <a href="{% url 'download_total_messages' %}">
-    <button class="send-button" type="button">Download Chat (JSON)</button>
-  </a>
-  </div>
+  <div class="page-content">
 
-  <main class="main-content-style chat-page-chat">
-    <h1 class="chat-title-chat">Conversazione</h1>
-
-    <div class="chat-box-wrapper">
-      <!-- LEFT SIDE: volume + progress -->
-      <div class="chat-box-containter">
-        <div class="chat-tools">
-          <div class="chat-image-place">
-            <img src="{% static 'activity/kid_reading.jpg' %}">
-          </div>
-          <div class="progress-bar" data-label="Progressione">
-            <div class="progress-fill"></div>
-          </div>
-          <div class="volume-buttons">
-            <button class="volume-button-up"></button>
-            <button class="volume-button-down"></button>
-          </div>
-        </div>
+    <div class="left">
+      <div class="image-wrapper">
+        <img src="{% static 'activity/kid_reading.jpg' %}" alt="Descriptive alt text" class="side-image">
       </div>
 
-      <div class="chat-box-chat" id="chat-box">
-        {% for message in messages %}
-        <div class="chat-message-chat {% if message.sender == 'user' %}user-message-chat{% else %}bot-message-chat{% endif %}">
-          <div class="message-content-chat">{{ message.text }}</div>
-        </div>
-        {% empty %}
-        <p class="no-messages-chat">Nessun messaggio</p>
-        {% endfor %}
+      <div class="textbox">
+        {% if non_modifiable_output %}
+          {{ non_modifiable_output }}
+        {% endif %}
       </div>
-
-      <!-- qui finisce la chat-->
+      <div class="download-button-wrapper">
+        <a href="{% url 'download_total_messages' %}">
+          <button class="send-button" type="button">Download Chat (JSON)</button>
+        </a>
+      </div>
     </div>
-    <form class="chat-input-form-chat" action="{% url 'chat' %}" method="POST">
-      {% csrf_token %}
-      <input type="hidden" name="activity_id" value="{{ activity_id }}">
-      <input type="hidden" name="group_id" value="{{ group_id }}">
-      <textarea name="message" class="chat-input-chat" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
-      <button type="submit" class="send-button-chat" {% if blocked %}disabled{% endif %}>Invia</button>
-    </form>
-  </main>
+
+    <main class="main-content chat-page">
+      <!--<h1 class="chat-title">Conversazione</h1>-->
+
+      <div class="chat-container">
+        <div class="chat-box" id="chat-box">
+          {% for message in messages %}
+            <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
+              <div class="message-content">{{ message.text }}</div>
+            </div>
+          {% empty %}
+            <p class="no-messages">Nessun messaggio</p>
+          {% endfor %}
+        </div>
+        <form class="chat-input-form" action="{% url 'chat' %}" method="POST">
+        {% csrf_token %}
+          <input type="hidden" name="activity_id" value="{{ activity_id }}">
+          <input type="hidden" name="group_id" value="{{ group_id }}">
+        <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+        <button type="submit" class="send-button" {% if blocked %}disabled{% endif %}>Invia</button>
+      </form>
+      </div>
+    </main>
+
+  </div>
 
 <script>
   // Auto-scroll to the bottom on page load
@@ -86,11 +83,11 @@
             sidebar: "#B2DFDB",    // tealish sidebar
         },
         3: {
-            input: "#90ee90",      // light yellow -> now its light green
-            bot: "#9bf09b",
+            input: "#FFF9C4",      // light yellow
+            bot: "#FFF59D",
             user: "#A5D6A7",
-            body: "#defade",
-            sidebar: "#90ee90",
+            body: "#FFFDE7",
+            sidebar: "#FFECB3",
         },
         4: {
             input: "#F8BBD0",      // light pink
@@ -102,21 +99,23 @@
     };
 
     const colors = stageColors[stage];
-    console.log("colors");
-    console.log(colors);
+    if (stage > 4) {
+      const colors = stageColors[(stage-2)%3+2];
+    }
+
     if (colors) {
-        console.log(document.querySelector(".chat-input-chat"));
+        console.log(document.querySelector(".chat-input"));
         console.log("bot message");
-        console.log(document.querySelectorAll(".bot-message-chat"));
-        document.querySelector(".chat-input-chat")?.style.setProperty("background-color", colors.input);
-        document.querySelectorAll(".bot-message-chat").forEach(el => el.style.setProperty("background-color", colors.bot));
-        document.querySelectorAll(".user-message-chat").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".send-button-chat").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".back-button-style").forEach(el => el.style.setProperty("background", colors.user));
+        console.log(document.querySelectorAll(".bot-message"));
+        document.querySelector(".chat-input")?.style.setProperty("background-color", colors.input);
+        document.querySelectorAll(".bot-message").forEach(el => el.style.setProperty("background-color", colors.bot));
+        document.querySelectorAll(".user-message").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".send-button").forEach(el => el.style.setProperty("background", colors.user));
+        document.querySelectorAll(".back-button").forEach(el => el.style.setProperty("background", colors.user));
         console.log("send button");
-        console.log(document.querySelectorAll(".send-button-chat"));
+        console.log(document.querySelectorAll(".send-button"));
         document.body.style.setProperty("background-color", colors.body);
-        document.querySelector(".sidebar-style")?.style.setProperty("background-color", colors.sidebar);
+        document.querySelector(".sidebar")?.style.setProperty("background-color", colors.sidebar);
     }
 });
 </script>

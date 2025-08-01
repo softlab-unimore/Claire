@@ -20,7 +20,7 @@ class AgentFromCsv:
         }
         self.model = OpenAIModel(**attr)
 
-        self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
+        #self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
 
     def is_activity_finished(self, current_phase, activity):
         phases_df, _, _, _ = self.load_df(activity)
@@ -30,7 +30,9 @@ class AgentFromCsv:
 
     def are_interactions_too_many(self, activity, current_phase, num_interactions):
         phases_df, _, _, _ = self.load_df(activity)
-        max_num_interactions = phases_df[phases_df["Fase"] == current_phase]["Numero interazioni massimo"]
+        max_num_interactions = phases_df[phases_df["Fase"] == current_phase]["Numero interazioni massimo"].iloc[0]
+        print(num_interactions)
+        print(max_num_interactions)
         if num_interactions >= max_num_interactions:
             return True
         return False
@@ -78,16 +80,19 @@ class AgentFromCsv:
         })
 
         if phase_row["Input non modificabile"] != "":
+            non_modifiable_output = phase_row["Input non modificabile"]
             messages.append({
                 "text": phase_row["Input non modificabile"],
-                "sender": "bot"
+                "sender": "system"
             })
             total_messages.append({
                 "text": phase_row["Input non modificabile"],
-                "sender": "bot"
+                "sender": "system"
             })
+        else:
+            non_modifiable_output = None
 
-        return messages, total_messages
+        return messages, total_messages, non_modifiable_output
 
     def apply_criteria(self, current_phase, messages, total_messages, activity):
         _, criteria_df, _, _ = self.load_df(activity)
