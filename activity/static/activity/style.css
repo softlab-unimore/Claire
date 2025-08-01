@@ -7,28 +7,62 @@ body {
     height: 100vh;
 }
 
-.back-button {
+/*.back-button {
     background: linear-gradient(135deg, #9d6eff, #a87bff);
     color: white;
     border: none;
-    padding: 12px 24px;
+    padding: 10px 20px;
+    margin-top: 8px;
     font-size: 15px;
     border-radius: 25px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
     transition: background 0.3s, transform 0.2s;
+}*/
+
+.back-button {
+    background: linear-gradient(135deg, #9d6eff, #a87bff);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 8px;
+    font-size: 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
+    transition: background 0.3s, transform 0.2s;
+    max-width: 100%; /* makes it adapt to sidebar width */
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
 /* Sidebar */
-.sidebar {
-    width: 70px;
+/*.sidebar {
+    width: 7%;
     background-color: #f3eaff;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding-top: 20px;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+}*/
+
+.sidebar {
+    width: 7%;
+    min-width: 90px; /* Optional, to preserve usability */
+    background-color: #f3eaff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+    flex-shrink: 0;
+    overflow-y: auto; /* ensures scroll instead of content overflow */
+    height: 100vh; /* fill full vertical space */
+    box-sizing: border-box;
 }
 
 .account-icon {
@@ -101,4 +135,38 @@ h1 {
     font-size: 18px;
     font-weight: 500;
     color: #3a3a3a;
+}
+
+/* members */
+
+.button-secondary {
+    background: linear-gradient(135deg, #c8aaff, #d1b8ff);
+    color: #625B71;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(157, 110, 255, 0.4);
+    transition: background 0.3s, transform 0.2s;
+}
+
+.list {
+    margin-bottom: 40px;
+}
+
+.list-item {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.list-item:hover {
+    background-color: #f1ebff;
+    cursor: pointer;
 }

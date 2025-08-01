@@ -3,6 +3,54 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    max-width: 75vw;
+}
+
+.page-content {
+  display: flex;
+  height: 100vh;
+    width: 100vw;
+  box-sizing: border-box;
+  padding: 20px;
+  gap: 20px;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+    padding: 10px;
+    padding-top: 30px;
+  justify-content: space-between; /* Push .textbox to top and button to bottom */
+  width: 30vw; /* or fixed value like 250px */
+  /*max-width: 300px;*/
+}
+
+.textbox {
+  padding: 16px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.download-button-wrapper {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  padding-top: 20px;
+}
+
+.image-wrapper {
+  width: 100%;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.side-image {
+  max-width: 100%;
+  max-height: 150px; /* or adjust as needed */
+  height: auto;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .chat-title {
@@ -12,6 +60,15 @@
     color: #4c4c4c;
 }
 
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* push children to the right */
+    padding: 10px;
+    padding-top: 0px;
+    height: 100vh;
+}
+
 .chat-box {
     flex: 1;
     background: #ffffff;
@@ -19,10 +76,26 @@
     border-radius: 16px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
     overflow-y: auto;
-    margin-bottom: 20px;
+    max-height: 70vh;
+    max-width: 50vw;
+    width:100%;
+    margin-bottom: 10px;
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+.chat-input-form {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-height: 10vh;
+    max-width: 50vw;
 }
 
 .chat-message {
@@ -54,16 +127,6 @@
     text-align: center;
     color: #aaa;
     font-size: 14px;
-}
-
-.chat-input-form {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    background: white;
-    border-radius: 16px;
-    padding: 10px 16px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
 }
 
 .chat-input {

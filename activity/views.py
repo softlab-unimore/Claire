@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from .forms import LoginForm, RegistrationForm, CreateClass, JoinClass, GetActivityForm, PostActivityForm
 from .models import Group, Activity, Dataset, UserActivity
 from .methods import openaimodel
-from .agent_from_csv import agent
+from .agent_from_csv import AgentFromCsv
 
 from django.contrib.auth.decorators import login_required
 
@@ -213,6 +213,11 @@ def get_new_activity(request):
 
 @login_required
 def get_chat(request):
+    agent = AgentFromCsv()
+    non_modifiable_output = None
+    if "non_modifiable_output" not in request.session:
+        request.session["non_modifiable_output"] = None
+
     if request.method == "GET":
         activity = get_object_or_404(Activity, id=request.GET["activity_id"])
     elif request.method == "POST":
@@ -221,7 +226,7 @@ def get_chat(request):
     if request.method == "GET":
         if "stage" not in request.session:
             request.session["stage"] = 1
-            request.session["num_interactions"] = 0
+            request.session["num_interactions"] = 1
 
         if "messages" not in request.session or len(request.session["messages"]) == 0:
             system_message = {
@@ -229,13 +234,13 @@ def get_chat(request):
                 "sender": "system",
             }
 
-            request.session["messages"], request.session["total_messages"] = agent.apply_phase(request.session["stage"], [system_message], [system_message], activity=activity)
+            request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"], [system_message], [system_message], activity=activity)
 
         additional_context = {"group_id": request.GET["group_id"], "activity_id": request.GET["activity_id"]}
     elif request.method == "POST":
         if "stage" not in request.session:
             request.session["stage"] = 1
-            request.session["num_interactions"] = 0
+            request.session["num_interactions"] = 1
 
         if agent.is_activity_finished(request.session["stage"], activity):
             messages_to_send = [{
@@ -267,7 +272,7 @@ def get_chat(request):
 
         request.session["messages"], request.session["total_messages"], criteria = agent.apply_criteria(request.session["stage"], request.session["messages"], request.session["total_messages"], activity=activity)
         next_interaction = agent.apply_logic(request.session["stage"], criteria, activity, previous_interaction)
-        if next_interaction == "next" or agent.are_interactions_too_many(request.session["num_interactions"]):
+        if next_interaction == "next" or agent.are_interactions_too_many(activity, request.session["stage"], request.session["num_interactions"]):
             request.session["stage"] += 1
             request.session["previous_interaction"] = None
             if agent.is_activity_finished(request.session["stage"], activity):
@@ -280,9 +285,9 @@ def get_chat(request):
                     "sender": "bot",
                 })
             else:
-                request.session["messages"], request.session["total_messages"] = agent.apply_phase(request.session["stage"], request.session["messages"], request.session["total_messages"], activity=activity)
+                request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"], request.session["messages"], request.session["total_messages"], activity=activity)
             request.session.modified = True
-            request.session["num_interactions"] = 0
+            request.session["num_interactions"] = 1
         else:
             request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity)
             request.session["previous_interaction"] = previous_interaction
@@ -304,9 +309,16 @@ def get_chat(request):
         "sender": message["sender"],
     } for message in request.session["messages"] if message["sender"] != "system"]
 
-    print(request.session["total_messages"])
+    if non_modifiable_output is not None and non_modifiable_output.lower() != "nan" and non_modifiable_output != "":
+        request.session["non_modifiable_output"] = non_modifiable_output
 
-    return render(request, "activity/chat.html", {"role": request.user.userprofile.role, "messages": messages_to_send, "blocked": blocked, "stage": request.session["stage"]} | additional_context)
+    return render(request, "activity/chat.html", {
+        "role": request.user.userprofile.role,
+        "messages": messages_to_send,
+        "blocked": blocked,
+        "stage": request.session["stage"],
+        "non_modifiable_output": request.session["non_modifiable_output"]
+    } | additional_context)
 
 @login_required
 def download_total_messages(request):
