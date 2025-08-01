@@ -1,0 +1,127 @@
+Fase,Criterio,Interazione,Interazione Precedente
+1,L1,Stimolo,Rispecchiamento
+1,L1,Pensiero ad alta voce,Stimolo
+1,L1,Rispecchiamento,Pensiero ad alta voce
+1,L2,Stimolo,Rispecchiamento
+1,L2,Pensiero ad alta voce,Stimolo
+1,L2,Rispecchiamento,Pensiero ad alta voce
+1,L3,next,Rispecchiamento
+1,L3,next,Stimolo
+1,L3,next,Pensiero ad alta voce
+2,L1,Stimolo,Rispecchiamento
+2,L1,Pensiero ad alta voce,Stimolo
+2,L1,Rispecchiamento,Pensiero ad alta voce
+2,L2,Stimolo,Rispecchiamento
+2,L2,Pensiero ad alta voce,Stimolo
+2,L2,Rispecchiamento,Pensiero ad alta voce
+2,L3,next,Rispecchiamento
+2,L3,next,Stimolo
+2,L3,next,Pensiero ad alta voce
+3,L1,Stimolo,Rispecchiamento
+3,L1,Pensiero ad alta voce,Stimolo
+3,L1,Rispecchiamento,Pensiero ad alta voce
+3,L2,Stimolo,Rispecchiamento
+3,L2,Pensiero ad alta voce,Stimolo
+3,L2,Rispecchiamento,Pensiero ad alta voce
+3,L3,next,Rispecchiamento
+3,L3,next,Stimolo
+3,L3,next,Pensiero ad alta voce
+4,L1,Stimolo,Rispecchiamento
+4,L1,Pensiero ad alta voce,Stimolo
+4,L1,Rispecchiamento,Pensiero ad alta voce
+4,L2,Stimolo,Rispecchiamento
+4,L2,Pensiero ad alta voce,Stimolo
+4,L2,Rispecchiamento,Pensiero ad alta voce
+4,L3,next,Rispecchiamento
+4,L3,next,Stimolo
+4,L3,next,Pensiero ad alta voce
+5,L1,Stimolo,Rispecchiamento
+5,L1,Pensiero ad alta voce,Stimolo
+5,L1,Rispecchiamento,Pensiero ad alta voce
+5,L2,Stimolo,Rispecchiamento
+5,L2,Pensiero ad alta voce,Stimolo
+5,L2,Rispecchiamento,Pensiero ad alta voce
+5,L3,next,Rispecchiamento
+5,L3,next,Stimolo
+5,L3,next,Pensiero ad alta voce
+6,L1,Stimolo,Rispecchiamento
+6,L1,Pensiero ad alta voce,Stimolo
+6,L1,Rispecchiamento,Pensiero ad alta voce
+6,L2,Stimolo,Rispecchiamento
+6,L2,Pensiero ad alta voce,Stimolo
+6,L2,Rispecchiamento,Pensiero ad alta voce
+6,L3,next,Rispecchiamento
+6,L3,next,Stimolo
+6,L3,next,Pensiero ad alta voce
+7,L1,Stimolo,Rispecchiamento
+7,L1,Pensiero ad alta voce,Stimolo
+7,L1,Rispecchiamento,Pensiero ad alta voce
+7,L2,Stimolo,Rispecchiamento
+7,L2,Pensiero ad alta voce,Stimolo
+7,L2,Rispecchiamento,Pensiero ad alta voce
+7,L3,next,Rispecchiamento
+7,L3,next,Stimolo
+7,L3,next,Pensiero ad alta voce
+8,L1,Stimolo,Rispecchiamento
+8,L1,Pensiero ad alta voce,Stimolo
+8,L1,Rispecchiamento,Pensiero ad alta voce
+8,L2,Stimolo,Rispecchiamento
+8,L2,Pensiero ad alta voce,Stimolo
+8,L2,Rispecchiamento,Pensiero ad alta voce
+8,L3,next,Rispecchiamento
+8,L3,next,Stimolo
+8,L3,next,Pensiero ad alta voce
+9,L1,Stimolo,Rispecchiamento
+9,L1,Pensiero ad alta voce,Stimolo
+9,L1,Rispecchiamento,Pensiero ad alta voce
+9,L2,Stimolo,Rispecchiamento
+9,L2,Pensiero ad alta voce,Stimolo
+9,L2,Rispecchiamento,Pensiero ad alta voce
+9,L3,next,Rispecchiamento
+9,L3,next,Stimolo
+9,L3,next,Pensiero ad alta voce
+10,L1,Stimolo,Rispecchiamento
+10,L1,Pensiero ad alta voce,Stimolo
+10,L1,Rispecchiamento,Pensiero ad alta voce
+10,L2,Stimolo,Rispecchiamento
+10,L2,Pensiero ad alta voce,Stimolo
+10,L2,Rispecchiamento,Pensiero ad alta voce
+10,L3,next,Rispecchiamento
+10,L3,next,Stimolo
+10,L3,next,Pensiero ad alta voce
+11,L1,Stimolo,Rispecchiamento
+11,L1,Pensiero ad alta voce,Stimolo
+11,L1,Rispecchiamento,Pensiero ad alta voce
+11,L2,Stimolo,Rispecchiamento
+11,L2,Pensiero ad alta voce,Stimolo
+11,L2,Rispecchiamento,Pensiero ad alta voce
+11,L3,next,Rispecchiamento
+11,L3,next,Stimolo
+11,L3,next,Pensiero ad alta voce
+12,L1,Stimolo,Rispecchiamento
+12,L1,Pensiero ad alta voce,Stimolo
+12,L1,Rispecchiamento,Pensiero ad alta voce
+12,L2,Stimolo,Rispecchiamento
+12,L2,Pensiero ad alta voce,Stimolo
+12,L2,Rispecchiamento,Pensiero ad alta voce
+12,L3,next,Rispecchiamento
+12,L3,next,Stimolo
+12,L3,next,Pensiero ad alta voce
+13,L1,Stimolo,Rispecchiamento
+13,L1,Pensiero ad alta voce,Stimolo
+13,L1,Rispecchiamento,Pensiero ad alta voce
+13,L2,Stimolo,Rispecchiamento
+13,L2,Pensiero ad alta voce,Stimolo
+13,L2,Rispecchiamento,Pensiero ad alta voce
+13,L3,next,Rispecchiamento
+13,L3,next,Stimolo
+13,L3,next,Pensiero ad alta voce
+14,L1,Stimolo,Rispecchiamento
+14,L1,Pensiero ad alta voce,Stimolo
+14,L1,Rispecchiamento,Pensiero ad alta voce
+14,L2,Stimolo,Rispecchiamento
+14,L2,Pensiero ad alta voce,Stimolo
+14,L2,Rispecchiamento,Pensiero ad alta voce
+14,L3,next,Rispecchiamento
+14,L3,next,Stimolo
+14,L3,next,Pensiero ad alta voce

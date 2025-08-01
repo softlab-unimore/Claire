@@ -11,4 +11,6 @@ urlpatterns = [
    path("create_class", views.create_class, name="create_class"),
    path("new_activity", views.get_new_activity, name="new_activity"),
    path("get_chat", views.get_chat, name="chat"),
+   path('download-messages/', views.download_total_messages, name='download_total_messages'),
+
 ]

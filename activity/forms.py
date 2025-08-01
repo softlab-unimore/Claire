@@ -132,6 +132,11 @@ class GetActivityForm(forms.Form):
    description = forms.CharField()
    text = forms.CharField()
 
+   phases = forms.FileField()
+   criteria = forms.FileField()
+   interaction = forms.FileField()
+   logic = forms.FileField()
+
    def __init__(self, *args, **kwargs):
        super().__init__(*args, **kwargs)
 
@@ -142,9 +147,7 @@ class GetActivityForm(forms.Form):
               self.fields["name"].initial = Activity.objects.get(id=self.activity_id).name
               self.fields["description"].initial = Activity.objects.get(id=self.activity_id).description
               self.fields["text"].initial = Activity.objects.get(id=self.activity_id).text
-              #self.fields["name"].required = False
-              #self.fields["description"].required = False
-              #self.fields["text"].required = False
+
               args[0]._mutable = True
               args[0]['name'] = self.fields["name"].initial
               args[0]['description'] = self.fields["description"].initial
@@ -168,12 +171,27 @@ class PostActivityForm(forms.Form):
    description = forms.CharField()
    text = forms.CharField()
 
+   phases = forms.FileField()
+   criteria = forms.FileField()
+   interaction = forms.FileField()
+   logic = forms.FileField()
+
    def clean(self):
        cleaned_data = super().clean()
+       required_files = ['phases', 'criteria', 'interaction', 'logic']
+
        name = cleaned_data.get('name')
        description = cleaned_data.get('description')
        text = cleaned_data.get('text')
        
        if not name or not description or not text:
            raise forms.ValidationError("All fields are required.")
+
+       for field in required_files:
+           file = cleaned_data.get(field)
+           if not file:
+               raise forms.ValidationError("no files All fields are required.")
+           if not file.name.endswith('.csv') or file.content_type != 'text/csv':
+               raise forms.ValidationError(f"All uploaded files must be CSV files.")
+
        return cleaned_data

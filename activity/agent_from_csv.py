@@ -1,0 +1,200 @@
+import os
+import pandas as pd
+import io
+
+from .methods import OpenAIModel
+from .prompts.prompts_csv.phase import phase_prompt
+from .prompts.prompts_csv.criteria import criteria_prompt
+from .prompts.prompts_csv.interaction import interaction_prompt
+from .models import Dataset
+
+from functools import lru_cache
+from copy import deepcopy
+from django.shortcuts import get_object_or_404
+
+class AgentFromCsv:
+    def __init__(self):
+        self.csv_dir = "./activity/csvs/"
+        self.phase_path = "phases.csv"
+        self.criteria = "criteria.csv"
+        self.interaction = "interaction.csv"
+        self.logic = "logic.csv"
+        attr = {
+            "model_name": os.environ["OPENAI_MODEL_NAME"],
+            "temperature": float(os.environ["OPENAI_TEMPERATURE"]),
+        }
+        self.model = OpenAIModel(**attr)
+
+        self.phases_df = pd.read_csv(os.path.join(self.csv_dir, self.phase_path))
+        self.criteria_df = pd.read_csv(os.path.join(self.csv_dir, self.criteria))
+        self.interaction_df = pd.read_csv(os.path.join(self.csv_dir, self.interaction))
+        self.logic_df = pd.read_csv(os.path.join(self.csv_dir, self.logic))
+
+        self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
+
+    def is_activity_finished(self, current_phase, activity):
+        phases_df, _, _, _ = self.load_df(activity)
+        if current_phase > len(phases_df):
+            return True
+        return False
+
+    def are_interactions_too_many(self, num_interactions):
+        if num_interactions >= self.max_num_interactions:
+            return True
+        return False
+
+    @lru_cache()
+    def load_df(self, activity):
+        dataset = activity.dataset
+        phases = pd.read_csv(io.BytesIO(dataset.phases))
+        criteria = pd.read_csv(io.BytesIO(dataset.criteria))
+        interaction = pd.read_csv(io.BytesIO(dataset.interaction))
+        logic = pd.read_csv(io.BytesIO(dataset.logic))
+
+        return phases, criteria, interaction, logic
+
+    def apply_phase(self, current_phase, messages, total_messages, activity):
+        phases_df, _, _, _ = self.load_df(activity)
+        phase_row = phases_df[phases_df["Fase"] == current_phase]
+        assert len(phase_row) == 1
+        phase_row = phase_row.iloc[0,:]
+        attr = {
+            "phase_number": phase_row["Fase"],
+            "phase_name": phase_row["Nome"],
+            "phase_goal": phase_row["Obiettivo"],
+            "phase_description": phase_row["Descrizione"],
+        }
+        prompt = phase_prompt.format(**attr)
+        messages.append({
+            "text": prompt,
+            "sender": "system"
+        })
+        total_messages.append({
+            "text": prompt,
+            "sender": "system"
+        })
+        prompt = "\n".join([message["text"]+"\n" for message in messages])
+        result = self.model.query(prompt)
+        messages = messages[:-1]
+        messages.append({
+            "text": result,
+            "sender": "bot"
+        })
+        total_messages.append({
+            "text": result,
+            "sender": "bot"
+        })
+
+        if phase_row["Input non modificabile"] != "":
+            messages.append({
+                "text": phase_row["Input non modificabile"],
+                "sender": "bot"
+            })
+            total_messages.append({
+                "text": phase_row["Input non modificabile"],
+                "sender": "bot"
+            })
+
+        return messages, total_messages
+
+    def apply_criteria(self, current_phase, messages, total_messages, activity):
+        _, criteria_df, _, _ = self.load_df(activity)
+        rows_criteria = criteria_df[criteria_df["Fase"] == current_phase]
+        results = []
+        for i, row in rows_criteria.iterrows():
+            l_descriptions = ""
+            for col_number in range(0, (len(criteria_df.columns)-2)//2):
+                num = col_number + 1
+                l_descriptions += f"L{num}) "
+                l_descriptions += row[f"L{num}-titolo"]+": "
+                l_descriptions += row[f"L{num}-descrizione"]+"\n"
+
+            attr = {
+                "phase_number": row["Fase"],
+                "criteria_name": row["Nome"],
+                "l_descriptions": l_descriptions,
+            }
+            prompt = criteria_prompt.format(**attr)
+            messages.append({
+                "text": prompt,
+                "sender": "system"
+            })
+            total_messages.append({
+                "text": prompt,
+                "sender": "system"
+            })
+
+            prompt = "\n".join([message["text"]+"\n" for message in messages])
+            print(prompt)
+            result = self.model.query(prompt)
+            total_messages.append({
+                "text": result,
+                "sender": "system"
+            })
+            print(result)
+            result = self.model.extract_result(result, "risposta finale:")
+            results.append(result)
+            messages = messages[:-1]
+            print(f"Livello del criterio: {result}")
+
+        """messages.append({
+            "text": results[0],
+            "sender": "bot"
+        })"""
+
+        return messages, total_messages, results[0] # currently, the method works only with one criteria for each phase
+
+    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity):
+        _, _, interaction_df, _ = self.load_df(activity)
+
+        rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)]
+        assert len(rows_interaction) == 1
+        rows_interaction = rows_interaction.iloc[0,:]
+        attr = {
+            "interaction_name": interaction_name,
+            "interaction_description": rows_interaction["Descrizione"],
+        }
+        prompt = interaction_prompt.format(**attr)
+        messages.append({
+            "text": prompt,
+            "sender": "system"
+        })
+        total_messages.append({
+            "text": prompt,
+            "sender": "system"
+        })
+        prompt = "\n".join([message["text"] + "\n" for message in messages])
+        result = self.model.query(prompt)
+        messages = messages[:-1]
+        messages.append({
+            "text": result,
+            "sender": "bot"
+        })
+        total_messages.append({
+            "text": result,
+            "sender": "bot"
+        })
+
+        print(f"Interazione corrente: {interaction_name}")
+
+        return messages, total_messages, interaction_name
+
+    def apply_logic(self, current_phase, evaluation, activity, old_interaction_name=None):
+        _, _, _, logic_df = self.load_df(activity)
+
+        rows_logic = logic_df[(logic_df["Fase"] == current_phase) &
+                                    (logic_df["Criterio"] == evaluation.upper())]
+
+        if old_interaction_name is not None:
+            rows_logic = rows_logic[rows_logic["Interazione Precedente"] == old_interaction_name]
+
+        rows_logic = rows_logic.iloc[0,:]
+
+        if old_interaction_name is None:
+            next_interaction_name = rows_logic["Interazione Precedente"]
+        else:
+            next_interaction_name = rows_logic["Interazione"]
+
+        return next_interaction_name
+
+agent = AgentFromCsv()

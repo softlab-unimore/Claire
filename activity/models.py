@@ -35,3 +35,12 @@ class UserActivity(models.Model):
    status = models.CharField(max_length=2, choices=Status, default=Status.IN_PROGRESS)
    activity_id = models.ForeignKey(Activity, on_delete=models.CASCADE)
    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Dataset(models.Model):
+   phases = models.BinaryField()
+   criteria = models.BinaryField()
+   interaction = models.BinaryField()
+   logic = models.BinaryField()
+   uploaded_at = models.DateTimeField(auto_now_add=True)
+
+   activity = models.OneToOneField(Activity, on_delete=models.CASCADE)

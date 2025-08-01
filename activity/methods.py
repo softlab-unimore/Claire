@@ -35,9 +35,10 @@ class OpenAIModel(BaseModel):
 
         return completion.choices[0].message.content.lower() #, metadata
 
-    def extract_result(self, text: str) -> bool:
-        response = text.lower().split("risposta finale:")[-1].strip()
-        return True if response == "vai alla fase successiva" else False
+    def extract_result(self, text: str, pattern: str) -> str:
+        response = text.lower().split(pattern)[-1].strip()
+        #return True if response == "vai alla fase successiva" else False
+        return response
 
     def query(self, prompt: str) -> str:
         for _ in range(self.max_retries):
@@ -62,7 +63,7 @@ class OpenAIModel(BaseModel):
 
         result = self.query(prompt)
         print(result)
-        return self.extract_result(result)
+        return self.extract_result(result, "risposta finale: ") == "vai alla fase successiva"
 
 attr = {
     "model_name": os.environ["OPENAI_MODEL_NAME"],

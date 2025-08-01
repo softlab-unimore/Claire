@@ -3,3 +3,5 @@ pydantic==2.11.3
 dotenv==0.9.9
 openai==1.76.0
 timeout_decorator==0.5.0
+pandas==2.3.1
+gunicorn==23.0.0
