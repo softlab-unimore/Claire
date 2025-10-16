@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
    path("", views.get_login, name="login"),
@@ -12,5 +14,4 @@ urlpatterns = [
    path("new_activity", views.get_new_activity, name="new_activity"),
    path("get_chat", views.get_chat, name="chat"),
    path('download-messages/', views.download_total_messages, name='download_total_messages'),
-
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -33,11 +33,22 @@ class OpenAIModel(BaseModel):
             "output_tokens": completion.usage.completion_tokens,
         }
 
-        return completion.choices[0].message.content.lower() #, metadata
+        return completion.choices[0].message.content #, metadata
+
+    """def extract_result(self, text: str, pattern: str) -> str:
+        response = text.lower().split(pattern)[-1].strip()
+        return response"""
 
     def extract_result(self, text: str, pattern: str) -> str:
-        response = text.lower().split(pattern)[-1].strip()
-        #return True if response == "vai alla fase successiva" else False
+        lower_text = text.lower()
+        lower_pattern = pattern.lower()
+
+        idx = lower_text.find(lower_pattern)
+        if idx == -1:
+            return ""  # pattern not found
+
+        start = idx + len(pattern)
+        response = text[start:].strip()
         return response
 
     def query(self, prompt: str) -> str:

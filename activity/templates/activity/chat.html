@@ -51,12 +51,12 @@
             <p class="no-messages">Nessun messaggio</p>
           {% endfor %}
         </div>
-        <form class="chat-input-form" action="{% url 'chat' %}" method="POST">
+        <form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="disableButton()">
         {% csrf_token %}
           <input type="hidden" name="activity_id" value="{{ activity_id }}">
           <input type="hidden" name="group_id" value="{{ group_id }}">
         <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
-        <button type="submit" class="send-button" {% if blocked %}disabled{% endif %}>Invia</button>
+        <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %}>Invia</button>
       </form>
       </div>
     </main>
@@ -64,6 +64,12 @@
   </div>
 
 <script>
+  function disableButton(form) {
+    const button = document.getElementById("chat-send-button");
+    button.disabled = true;
+    button.textContent = "Invio in corso...";
+  }
+
   // Auto-scroll to the bottom on page load
   const chatBox = document.getElementById('chat-box');
   if (chatBox) {

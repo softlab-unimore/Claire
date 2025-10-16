@@ -227,6 +227,7 @@ def get_chat(request):
         if "stage" not in request.session:
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
+            request.session["suitability_counter"] = 0
 
         if "messages" not in request.session or len(request.session["messages"]) == 0:
             system_message = {
@@ -241,10 +242,11 @@ def get_chat(request):
         if "stage" not in request.session:
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
+            request.session["suitability_counter"] = 0
 
         if agent.is_activity_finished(request.session["stage"], activity):
             messages_to_send = [{
-                "text": message["text"].replace("Bot: ", "").replace("User: ", ""),
+                "text": message["text"].replace("BOT: ", "").replace("USER: ", ""),
                 "sender": message["sender"],
             } for message in request.session["messages"] if message["sender"] != "system"]
             additional_context = {}
@@ -261,37 +263,56 @@ def get_chat(request):
         previous_interaction = request.session.get("previous_interaction", None)
 
         request.session["messages"].append({
-            "text": request.POST["message"],
+            "text": "USER: "+request.POST["message"],
             "sender": "user",
         })
         request.session["total_messages"].append({
-            "text": request.POST["message"],
+            "text": "USER: "+request.POST["message"],
             "sender": "user",
         })
         request.session.modified = True
 
-        request.session["messages"], request.session["total_messages"], criteria = agent.apply_criteria(request.session["stage"], request.session["messages"], request.session["total_messages"], activity=activity)
-        next_interaction = agent.apply_logic(request.session["stage"], criteria, activity, previous_interaction)
+        request.session["messages"], request.session["total_messages"], criteria, suitability = agent.apply_criteria(
+            request.session["stage"],
+            request.session["messages"],
+            request.session["total_messages"],
+            activity=activity,
+            suitability_counter=request.session["suitability_counter"]
+        )
+        if not suitability:
+            request.session["suitability_counter"] += 1
+            if previous_interaction is None:
+                next_interaction = agent.apply_logic(request.session["stage"], criteria, activity, previous_interaction)
+            else:
+                next_interaction = previous_interaction
+        else:
+            request.session["suitability_counter"] = 0
+            next_interaction = agent.apply_logic(request.session["stage"], criteria, activity, previous_interaction)
+
         if next_interaction == "next" or agent.are_interactions_too_many(activity, request.session["stage"], request.session["num_interactions"]):
-            request.session["stage"] += 1
-            request.session["previous_interaction"] = None
-            if agent.is_activity_finished(request.session["stage"], activity):
+            if agent.is_activity_finished(request.session["stage"]+1, activity):
                 request.session["messages"].append({
-                    "text": "Complimenti! Hai terminato l'attività!",
+                    "text": "BOT: Complimenti! Hai terminato l'attività!",
                     "sender": "bot",
                 })
                 request.session["total_messages"].append({
-                    "text": "Complimenti! Hai terminato l'attività!",
+                    "text": "BOT: Complimenti! Hai terminato l'attività!",
                     "sender": "bot",
                 })
             else:
-                request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"], request.session["messages"], request.session["total_messages"], activity=activity)
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity)
+                request.session["messages"] = request.session["messages"][:-1]
+                request.session["messages"].append(request.session["total_messages"][-2])
+                request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"]+1, request.session["messages"], request.session["total_messages"], activity=activity)
             request.session.modified = True
+            request.session["previous_interaction"] = None
+            request.session["stage"] += 1
             request.session["num_interactions"] = 1
         else:
             request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity)
             request.session["previous_interaction"] = previous_interaction
-            request.session["num_interactions"] += 1
+            if suitability:
+                request.session["num_interactions"] += 1
 
         request.session.modified = True
 
@@ -305,7 +326,7 @@ def get_chat(request):
         blocked = False
 
     messages_to_send = [{
-        "text": message["text"].replace("Bot: ", "").replace("User: ", ""),
+        "text": message["text"].replace("BOT: ", "").replace("USER: ", ""),
         "sender": message["sender"],
     } for message in request.session["messages"] if message["sender"] != "system"]
 

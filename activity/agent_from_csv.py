@@ -31,8 +31,7 @@ class AgentFromCsv:
     def are_interactions_too_many(self, activity, current_phase, num_interactions):
         phases_df, _, _, _ = self.load_df(activity)
         max_num_interactions = phases_df[phases_df["Fase"] == current_phase]["Numero interazioni massimo"].iloc[0]
-        print(num_interactions)
-        print(max_num_interactions)
+
         if num_interactions >= max_num_interactions:
             return True
         return False
@@ -70,12 +69,15 @@ class AgentFromCsv:
         prompt = "\n".join([message["text"]+"\n" for message in messages])
         result = self.model.query(prompt)
         messages = messages[:-1]
+        if messages[-1]["sender"] == "system":
+            messages = messages[:-1]
+
         messages.append({
-            "text": result,
+            "text": "BOT: "+result,
             "sender": "bot"
         })
         total_messages.append({
-            "text": result,
+            "text": "BOT: "+result,
             "sender": "bot"
         })
 
@@ -94,8 +96,9 @@ class AgentFromCsv:
 
         return messages, total_messages, non_modifiable_output
 
-    def apply_criteria(self, current_phase, messages, total_messages, activity):
+    def apply_criteria(self, current_phase, messages, total_messages, activity, suitability_counter):
         _, criteria_df, _, _ = self.load_df(activity)
+        suitability = True
         rows_criteria = criteria_df[criteria_df["Fase"] == current_phase]
         results = []
         for i, row in rows_criteria.iterrows():
@@ -133,18 +136,23 @@ class AgentFromCsv:
             results.append(result)
             messages = messages[:-1]
             print(f"Livello del criterio: {result}")
+            if result.strip().lower() == "non inerente":
+                suitability = False
+                break
 
         """messages.append({
             "text": results[0],
             "sender": "bot"
         })"""
+        if suitability_counter >= 3:
+            suitability = True
 
-        return messages, total_messages, results[0] # currently, the method works only with one criteria for each phase
+        return messages, total_messages, results[0], suitability # currently, the method works only with one criteria for each phase
 
     def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity):
         _, _, interaction_df, _ = self.load_df(activity)
 
-        rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)]
+        rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
         assert len(rows_interaction) == 1
         rows_interaction = rows_interaction.iloc[0,:]
         attr = {
@@ -164,11 +172,11 @@ class AgentFromCsv:
         result = self.model.query(prompt)
         messages = messages[:-1]
         messages.append({
-            "text": result,
+            "text": "BOT: "+result,
             "sender": "bot"
         })
         total_messages.append({
-            "text": result,
+            "text": "BOT: "+result,
             "sender": "bot"
         })
 
@@ -179,13 +187,19 @@ class AgentFromCsv:
     def apply_logic(self, current_phase, evaluation, activity, old_interaction_name=None):
         _, _, _, logic_df = self.load_df(activity)
 
-        rows_logic = logic_df[(logic_df["Fase"] == current_phase) &
-                                    (logic_df["Criterio"] == evaluation.upper())]
+        try:
+            rows_logic = logic_df[(logic_df["Fase"] == current_phase) &
+                                        (logic_df["Criterio"] == evaluation.upper())]
 
-        if old_interaction_name is not None:
-            rows_logic = rows_logic[rows_logic["Interazione Precedente"] == old_interaction_name]
+            if old_interaction_name is not None:
+                rows_logic = rows_logic[rows_logic["Interazione Precedente"] == old_interaction_name]
 
-        rows_logic = rows_logic.iloc[0,:]
+            rows_logic = rows_logic.iloc[0, :]
+        except:
+            print(logic_df.head())
+            print(current_phase)
+            rows_logic = logic_df[(logic_df["Fase"] == current_phase)]
+            rows_logic = rows_logic.iloc[0, :]
 
         if old_interaction_name is None:
             next_interaction_name = rows_logic["Interazione Precedente"]

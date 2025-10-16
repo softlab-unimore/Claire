@@ -4,6 +4,6 @@ La valutazione si basa sul criterio "{criteria_name}". Il criterio viene analizz
 
 {l_descriptions}
 
-Prima ragiona step-by-step. Infine, scrivi "Risposta finale: " seguito esclusivamente dal nome dell'indicatore di valutazione ("L1", "L2", ..., "Ln").
+Prima ragiona step-by-step. Infine, scrivi "Risposta finale: " seguito esclusivamente dal nome dell'indicatore di valutazione ("L1", "L2", ..., "Ln") oppure dalla scritta "non inerente" se la risposta è completamente non inerente alla domanda.
 Non scrivere nient'altro dopo "Risposta finale: ".
 """
