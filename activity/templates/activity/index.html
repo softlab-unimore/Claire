@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reciprocal Teaching</title>
+<link rel="stylesheet" href="{% static 'activity/base.css' %}">
 <link rel="stylesheet" href="{% static 'activity/style.css' %}">
+
 </head>
 
 <body>
@@ -28,20 +30,94 @@
                 <div class="class-name">Nuova classe</div>
             </div>
             </a>
-{% for group in groups %}
-<form action="{% url 'activity' %}" method="POST" style="display:inline;">
-    {% csrf_token %}
-    <input type="hidden" name="group_id" value="{{ group.id }}">
-    <button type="submit" style="all: unset; width: 100%;">
-        <div class="class-card existing-class">
-            <img src="{% static 'activity/image0.png' %}" alt="Class 1 Icon" class="class-image">
-            <div class="class-name">{{ group.name }}</div>
-        </div>
-    </button>
-</form>
-{% endfor %}
+            {% for group in groups %}
+            <form action="{% url 'activity' %}" method="POST" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="group_id" value="{{ group.id }}">
+                <button type="submit" style="all: unset; width: 100%;">
+                    <div class="class-card existing-class">
+                        <img src="{% static 'activity/image0.png' %}" alt="Class 1 Icon" class="class-image">
+                        <div class="class-name">{{ group.name }}</div>
+
+                        <!-- Bin icon for each existing class -->
+                        {% if role == "2" %}
+                        <span class="delete-bin" title="Elimina" onclick="openDeleteModal(event, {{ group.id }})" role="button" aria-label="Elimina classe">
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          </svg>
+                        </span>
+                        {% endif %}
+
+                    </div>
+                </button>
+            </form>
+            {% endfor %}
         </section>
     </main>
+
+    <!-- Confirmation modal (hidden by default) -->
+    <div id="deleteModalOverlay" class="delete-modal-overlay" onclick="closeDeleteModal()">
+      <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="event.stopPropagation()">
+        <h2 id="deleteModalTitle">Sei sicuro?</h2>
+        <p>L'eliminazione della classe non è reversibile. L'azione cancellerà definitivamente tutti i dati associati alla classe.</p>
+
+        <form id="deleteForm" method="POST" action="{% url 'delete_class' %}">
+          {% csrf_token %}
+          <!-- default empty value; will be set by JS -->
+          <input type="hidden" name="group_id" id="deleteGroupId" value="">
+          <div class="modal-actions">
+            <button type="button" class="modal-button annulla" onclick="closeDeleteModal()">Annulla</button>
+            <button type="submit" id="procediButton" class="modal-button procedi">Procedi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+<script>
+// Open delete confirmation modal.
+// event: the click event on the bin (used to stop propagation)
+// groupId: integer/string or null
+function openDeleteModal(event, groupId) {
+  if (event) {
+    try { event.stopPropagation(); event.preventDefault(); } catch (err) {}
+  }
+  var overlay = document.getElementById('deleteModalOverlay');
+  var input = document.getElementById('deleteGroupId');
+  var procedi = document.getElementById('procediButton');
+
+  if (groupId === null || groupId === undefined || groupId === '') {
+    input.value = '';
+    procedi.setAttribute('disabled', 'disabled');
+  } else {
+    input.value = String(groupId);
+    procedi.removeAttribute('disabled');
+  }
+
+  overlay.classList.add('open');
+  var cancelBtn = document.querySelector('.modal-button.annulla');
+  if (cancelBtn) cancelBtn.focus();
+}
+
+// Close the modal without action
+function closeDeleteModal() {
+  var overlay = document.getElementById('deleteModalOverlay');
+  overlay.classList.remove('open');
+}
+
+// Prevent form submission if group_id is empty (safety)
+document.addEventListener('DOMContentLoaded', function(){
+  var deleteForm = document.getElementById('deleteForm');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', function(e){
+      var input = document.getElementById('deleteGroupId');
+      if (!input.value) {
+        e.preventDefault();
+        closeDeleteModal();
+      }
+    });
+  }
+});
+</script>
 
 </body>
 </html>

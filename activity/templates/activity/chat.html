@@ -4,16 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat - Reciprocal Learning</title>
+  <title>CLAIRE</title>
+  <link rel="stylesheet" href="{% static 'activity/base.css' %}">
   <link rel="stylesheet" href="{% static 'activity/style.css' %}">
   <link rel="stylesheet" href="{% static 'activity/chat.css' %}">
+  <!-- Add Atkinson Hyperlegible font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lottie Web Component (will load from CDN) -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>
 
-<body>
+<body class="phase-{{ stage|default:0 }}">
 
   <aside class="sidebar">
     <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
     <div class="account-text">Account</div>
+
     <a href="{% url 'logout' %}">
       <button class="back-button">Logout</button>
     </a>
@@ -22,16 +30,44 @@
   <div class="page-content">
 
     <div class="left">
-      <div class="image-wrapper">
-        <img src="{% static 'activity/kid_reading.jpg' %}" alt="Descriptive alt text" class="side-image">
-      </div>
+      <!-- REPLACED: use Lottie animation for clarity -->
+      <!--<div class="phase-animation" aria-hidden="true">
+        <div class="lottie-wrapper">
+          <lottie-player id="reading-lottie" src="https://assets4.lottiefiles.com/packages/lf20_touohxv0.json"  background="transparent"  speed="1"  style="width:100%; height:220px;"  loop  autoplay></lottie-player>
+          <div class="sparkles-wrapper" aria-hidden="true">
+            <span class="sparkle" style="left:6%; top:12%; background:#ffd36a"></span>
+            <span class="sparkle" style="left:18%; top:6%; background:#6fc3ff"></span>
+            <span class="sparkle" style="left:36%; top:20%; background:#ff8c66"></span>
+            <span class="sparkle" style="left:60%; top:8%; background:#9fd3ff"></span>
+            <span class="sparkle" style="left:78%; top:18%; background:#ffd36a"></span>
+            <span class="sparkle" style="left:86%; top:6%; background:#a7f39b"></span>
+          </div>
+        </div>
+      </div>-->
 
-      <div class="textbox">
+      <div class="textbox container-card" role="region" aria-label="Story">
         {% if non_modifiable_output %}
-          {{ non_modifiable_output }}
+          <div class="story-text">{{ non_modifiable_output }}</div>
+        {% else %}
+          <div class="story-text"></div>
         {% endif %}
       </div>
+
+      <div class="story-footer">
+          <div class="progress">
+            <div id="progress-bar" class="progress-bar" style="width:0%;"></div>
+          </div>
+          <div class="page-num" id="page-num">{{ stage|default:1 }}</div>
+      </div>
+
       <div class="download-button-wrapper">
+        <!-- INSERTED: caps toggle moved here so it appears next to the download button -->
+        <label class="caps-toggle" title="Tutto maiuscolo (Caps Lock)" style="margin-right: 10px;">
+          <input id="capsToggle" type="checkbox" aria-label="Attiva tutto maiuscolo">
+          <span class="switch" role="switch" aria-checked="false" tabindex="0"></span>
+          <span class="label">Tutto maiuscolo</span>
+        </label>
+
         <a href="{% url 'download_total_messages' %}">
           <button class="send-button" type="button">Download Chat (JSON)</button>
         </a>
@@ -41,89 +77,246 @@
     <main class="main-content chat-page">
       <!--<h1 class="chat-title">Conversazione</h1>-->
 
-      <div class="chat-container">
-        <div class="chat-box" id="chat-box">
+      <div class="textbox">
+        {% if stage and stage|add:0 > 1 %}
+          <div class="phase-indicator" role="status" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">Fase {{ stage }}</span>
+          </div>
+        {% endif %}
+
+        <!--<div class="chat-box" id="chat-box">-->
           {% for message in messages %}
-            <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
-              <div class="message-content">{{ message.text }}</div>
+            <div class="message-row {% if message.sender == 'user' %}row-user{% else %}row-bot{% endif %}">
+              {% if message.sender != 'user' %}
+                <img src="{% static 'activity/generic-avatar0.png' %}" alt="Avatar" class="msg-avatar">
+              {% endif %}
+              <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
+                <div class="message-content">{{ message.text }}</div>
+              </div>
             </div>
           {% empty %}
             <p class="no-messages">Nessun messaggio</p>
           {% endfor %}
-        </div>
-        <form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="disableButton()">
-        {% csrf_token %}
-          <input type="hidden" name="activity_id" value="{{ activity_id }}">
-          <input type="hidden" name="group_id" value="{{ group_id }}">
-        <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
-        <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %}>Invia</button>
-      </form>
+        <!--</div>-->
+      </div>
+      <div style="margin-top: 10px;">
+        <form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="return disableButton();">
+          {% csrf_token %}
+            <input type="hidden" name="activity_id" value="{{ activity_id }}">
+            <input type="hidden" name="group_id" value="{{ group_id }}">
+          <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+          <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %} aria-label="Send message">
+            <!-- arrow icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="btn-label">Invia</span>
+          </button>
+        </form>
       </div>
     </main>
 
   </div>
 
 <script>
-  function disableButton(form) {
+  // Keep the original UX behaviour: disable send button on submit and auto-scroll chat
+  function disableButton() {
     const button = document.getElementById("chat-send-button");
-    button.disabled = true;
-    button.textContent = "Invio in corso...";
+    if (button) {
+      button.disabled = true;
+      const label = button.querySelector('.btn-label');
+      if (label) {
+        label.textContent = 'Invio in corso';
+      } else {
+        // fallback
+        button.textContent = 'Invio in corso';
+      }
+      // keep accessibility state
+      button.setAttribute('aria-disabled', 'true');
+    }
+    return true; // allow form to submit
   }
-
-  // Auto-scroll to the bottom on page load
-  const chatBox = document.getElementById('chat-box');
-  if (chatBox) {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-  const stage = {{ stage }};
-  console.log(stage);
 
   document.addEventListener("DOMContentLoaded", function() {
-    // Define colors per stage
-    const stageColors = {
-        2: {
-            input: "#E0F7FA",      // light cyan
-            bot: "#B2EBF2",        // lighter blue
-            user: "#4DB6AC",
-            body: "#E0F2F1",       // very light teal
-            sidebar: "#B2DFDB",    // tealish sidebar
-        },
-        3: {
-            input: "#FFF9C4",      // light yellow
-            bot: "#FFF59D",
-            user: "#A5D6A7",
-            body: "#FFFDE7",
-            sidebar: "#FFECB3",
-        },
-        4: {
-            input: "#F8BBD0",      // light pink
-            bot: "#F48FB1",
-            user: "#CE93D8",
-            body: "#FCE4EC",
-            sidebar: "#F8BBD0",
-        },
-    };
+      // Auto-scroll to the bottom on page load
+      const chatBox = document.getElementById('chat-box');
+      if (chatBox) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
 
-    const colors = stageColors[stage];
-    if (stage > 4) {
-      const colors = stageColors[(stage-2)%3+2];
+      // set progress bar based on stage and total phases (assume 4 phases)
+      const totalPhases = 4;
+      const stageRaw = {{ stage|default:0 }};
+      const stageNum = Number(stageRaw) || 0;
+      const progressPercent = Math.min(100, Math.round((stageNum / totalPhases) * 100));
+      const progressEl = document.getElementById('progress-bar');
+      if (progressEl) { progressEl.style.width = progressPercent + '%'; }
+      const pageNumEl = document.getElementById('page-num');
+      if (pageNumEl) { pageNumEl.textContent = stageNum || 1; }
+
+      // small entrance animation for the left phase animation when a new phase is active
+      const anim = document.querySelector('.phase-animation');
+      if (anim) {
+        anim.classList.remove('animate-once');
+        // trigger reflow to restart animation when page loads/refreshed
+        void anim.offsetWidth;
+        anim.classList.add('animate-once');
+      }
+
+      // If we are in a phase greater than 1, emphasize the phase animation (bigger pulse)
+      const stage = stageNum;
+      if (stage > 1) {
+        const target = document.querySelector('.phase-anim-' + stage);
+        if (target) {
+          // add a larger pulsing animation class briefly
+          target.classList.add('animate-large');
+          setTimeout(() => { target.classList.remove('animate-large'); }, 3000);
+        }
+        // Also give the whole phase-animation container an emphasis briefly
+        if (anim) {
+          anim.classList.add('animate-large');
+          // reveal sparkles briefly by adding 'pop' class to pieces inside
+          const sparks = anim.querySelectorAll('.sparkle');
+          sparks.forEach((s, i) => { setTimeout(() => s.classList.add('pop'), i*80); setTimeout(() => s.classList.remove('pop'), 2000 + (i*30)); });
+
+          // if there's a lottie player, play it to emphasize the change
+          const lottie = document.getElementById('reading-lottie');
+          if (lottie && typeof lottie.play === 'function') {
+            try { lottie.play(); } catch(e) { /* ignore if not supported */ }
+          }
+
+          setTimeout(() => anim.classList.remove('animate-large'), 3000);
+        }
+      }
+
+      // Observe changes in the page number element (useful if stage updates dynamically)
+      const pageNumNode = document.getElementById('page-num');
+      if (pageNumNode) {
+        let lastVal = pageNumNode.textContent;
+        const obs = new MutationObserver(mutations => {
+          mutations.forEach(m => {
+            const newVal = pageNumNode.textContent;
+            if (newVal !== lastVal) {
+              lastVal = newVal;
+              // trigger the phase animation corresponding to the new value
+              const newStage = Number(newVal) || 0;
+              const newTarget = document.querySelector('.phase-anim-' + newStage);
+              if (newTarget) {
+                newTarget.classList.add('animate-large');
+                setTimeout(() => newTarget.classList.remove('animate-large'), 3000);
+              }
+              if (anim) {
+                anim.classList.add('animate-large');
+                const sparks = anim.querySelectorAll('.sparkle');
+                sparks.forEach((s, i) => { setTimeout(() => s.classList.add('pop'), i*80); setTimeout(() => s.classList.remove('pop'), 2000 + (i*30)); });
+                // play lottie briefly
+                const lottie = document.getElementById('reading-lottie');
+                if (lottie && typeof lottie.play === 'function') {
+                  try { lottie.play(); } catch(e) {}
+                }
+                setTimeout(() => anim.classList.remove('animate-large'), 3000);
+              }
+            }
+          });
+        });
+        obs.observe(pageNumNode, { characterData: true, childList: true, subtree: true });
+      }
+    });
+
+  // Caps toggle behavior: persists preference when toggled, but starts disabled on load.
+  (function(){
+    var STORAGE_KEY = 'ui_all_caps';
+
+    // Apply/remove inline transform on the specific elements we want to affect immediately.
+    function applyInlineCaps(on) {
+      try {
+        // story text
+        var storyEls = document.querySelectorAll('.story-text');
+        storyEls.forEach(function(el){
+          el.style.textTransform = on ? 'uppercase' : '';
+        });
+        // chat messages content (covers both bot and user messages)
+        var msgEls = document.querySelectorAll('.chat-box .message-content, .chat-box .chat-message, .chat-message .message-content');
+        msgEls.forEach(function(el){
+          el.style.textTransform = on ? 'uppercase' : '';
+        });
+      } catch (e) { /* ignore DOM errors */ }
     }
 
-    if (colors) {
-        console.log(document.querySelector(".chat-input"));
-        console.log("bot message");
-        console.log(document.querySelectorAll(".bot-message"));
-        document.querySelector(".chat-input")?.style.setProperty("background-color", colors.input);
-        document.querySelectorAll(".bot-message").forEach(el => el.style.setProperty("background-color", colors.bot));
-        document.querySelectorAll(".user-message").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".send-button").forEach(el => el.style.setProperty("background", colors.user));
-        document.querySelectorAll(".back-button").forEach(el => el.style.setProperty("background", colors.user));
-        console.log("send button");
-        console.log(document.querySelectorAll(".send-button"));
-        document.body.style.setProperty("background-color", colors.body);
-        document.querySelector(".sidebar")?.style.setProperty("background-color", colors.sidebar);
+    function setCapsOn(on) {
+      if (on) document.body.classList.add('caps-on');
+      else document.body.classList.remove('caps-on');
+      var switchEl = document.querySelector('.caps-toggle .switch');
+      if (switchEl) switchEl.setAttribute('aria-checked', on ? 'true' : 'false');
+
+      // Ensure the story and chat text become uppercase immediately and reliably.
+      applyInlineCaps(!!on);
     }
-});
+
+    function getStored() {
+      try {
+        return localStorage.getItem(STORAGE_KEY) === '1';
+      } catch (e) { return false; }
+    }
+
+    function initCapsToggle() {
+      var checkbox = document.getElementById('capsToggle');
+      var switchEl = document.querySelector('.caps-toggle .switch');
+
+      // CHANGED: always start not active on page load (ignore stored preference)
+      var enabled = false;
+      if (checkbox) checkbox.checked = enabled;
+      setCapsOn(enabled);
+
+      function updateState(on) {
+        try { localStorage.setItem(STORAGE_KEY, on ? '1' : '0'); } catch (e) {}
+        setCapsOn(on);
+      }
+
+      if (checkbox) {
+        checkbox.addEventListener('change', function(e){
+          updateState(!!checkbox.checked);
+        });
+      }
+
+      if (switchEl) {
+        // visible switch toggles the hidden checkbox (and supports keyboard)
+        switchEl.addEventListener('click', function(e){
+          e.preventDefault();
+          if (!checkbox) return;
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        switchEl.addEventListener('keydown', function(e){
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            switchEl.click();
+          }
+        });
+      }
+
+      // Observe dynamic updates and keep inline caps in sync
+      var observerConfig = { childList: true, subtree: true, characterData: true };
+      var chatBox = document.querySelector('.chat-box');
+      if (chatBox) {
+        var chatObs = new MutationObserver(function(){ applyInlineCaps(getStored()); });
+        chatObs.observe(chatBox, observerConfig);
+      }
+      var story = document.querySelector('.story-text');
+      if (story) {
+        var storyObs = new MutationObserver(function(){ applyInlineCaps(getStored()); });
+        storyObs.observe(story, observerConfig);
+      }
+    }
+
+    // Run immediately if DOM is ready, otherwise wait for DOMContentLoaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCapsToggle);
+    } else {
+      initCapsToggle();
+    }
+  })();
 </script>
 
 </body>

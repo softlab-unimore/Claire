@@ -39,10 +39,16 @@ class AgentFromCsv:
     @lru_cache()
     def load_df(self, activity):
         dataset = activity.dataset
-        phases = pd.read_csv(io.BytesIO(dataset.phases))
-        criteria = pd.read_csv(io.BytesIO(dataset.criteria))
-        interaction = pd.read_csv(io.BytesIO(dataset.interaction))
-        logic = pd.read_csv(io.BytesIO(dataset.logic))
+        try:
+            phases = pd.read_excel(io.BytesIO(dataset.phases))
+            criteria = pd.read_excel(io.BytesIO(dataset.criteria))
+            interaction = pd.read_excel(io.BytesIO(dataset.interaction))
+            logic = pd.read_excel(io.BytesIO(dataset.logic))
+        except:
+            phases = pd.read_csv(io.BytesIO(dataset.phases))
+            criteria = pd.read_csv(io.BytesIO(dataset.criteria))
+            interaction = pd.read_csv(io.BytesIO(dataset.interaction))
+            logic = pd.read_csv(io.BytesIO(dataset.logic))
 
         return phases, criteria, interaction, logic
 
@@ -151,6 +157,17 @@ class AgentFromCsv:
 
     def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity):
         _, _, interaction_df, _ = self.load_df(activity)
+
+        if interaction_name == "next":
+            messages.append({
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
+                "sender": "system"
+            })
+            total_messages.append({
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
+                "sender": "system"
+            })
+            return messages, total_messages, -1
 
         rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
         assert len(rows_interaction) == 1
