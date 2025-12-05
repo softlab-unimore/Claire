@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reciprocal Learning</title>
+<link rel="stylesheet" href="{% static 'activity/base.css' %}">
 <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
@@ -29,12 +30,12 @@
             <button type="submit" style="all: unset; width: 100%;">
             <div class="class-card new-class">
                 <img src="{% static 'activity/icon0.png' %}" alt="New Class Icon" class="class-image">
-                <div class="class-name">{% if role == "2" %}Aggiungi e visualizza membri{% else %} Visualizza membri {% endif %}</div>
+                <div class="class-name">{% if role == '2' %}Aggiungi e visualizza membri{% else %} Visualizza membri {% endif %}</div>
             </div>
             </button>
             </form>
 
-            {% if role == "2" %}
+            {% if role == '2' %}
             <form action="{% url 'new_activity' %}" method="GET" style="display:inline;">
                {% csrf_token %}
                <input type="hidden" name="group_id" value="{{ group_id }}">
@@ -47,21 +48,93 @@
             </form>
             {% endif %}
 
-{% for activity in activities %}
-<form action="{% if role == "2" %}{% url 'new_activity' %}{% else %}{% url 'chat' %}{% endif %}" method="GET" style="display:inline;">
-    {% csrf_token %}
-    <input type="hidden" name="activity_id" value="{{ activity.id }}">
-    <input type="hidden" name="group_id" value="{{ group_id }}">
-    <button type="submit" style="all: unset; width: 100%;">
-        <div class="class-card existing-class">
-            <img src="{% static 'activity/image0.png' %}" alt="Activity Icon" class="class-image">
-            <div class="class-name">{{ activity.name }}</div>
-        </div>
-    </button>
-</form>
-{% endfor %}
+            {% for activity in activities %}
+            <form action="{% if role == '2' %}{% url 'new_activity' %}{% else %}{% url 'chat' %}{% endif %}" method="GET" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="activity_id" value="{{ activity.id }}">
+                <input type="hidden" name="group_id" value="{{ group_id }}">
+                <button type="submit" style="all: unset; width: 100%;">
+                    <div class="class-card existing-class">
+                        <img src="{% static 'activity/image0.png' %}" alt="Activity Icon" class="class-image">
+                        <div class="class-name">{{ activity.name }}</div>
+
+                        <!-- Bin icon for each existing class -->
+                        {% if role == "2" %}
+                        <span class="delete-bin" title="Elimina" onclick="openDeleteModal(event, {{ activity.id }})" role="button" aria-label="Elimina attività">
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                          </svg>
+                        </span>
+                        {% endif %}
+                    </div>
+                </button>
+            </form>
+            {% endfor %}
+
+            <!-- Confirmation modal (hidden by default) -->
+            <div id="deleteModalOverlay" class="delete-modal-overlay" onclick="closeDeleteModal()">
+              <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="event.stopPropagation()">
+                <h2 id="deleteModalTitle">Sei sicuro?</h2>
+                <p>L'eliminazione dell'attività non è reversibile. L'azione cancellerà definitivamente tutti i dati associati all'attività.</p>
+
+                <form id="deleteForm" method="POST" action="{% url 'delete_activity' %}">
+                    {% csrf_token %}
+                    <!--<input type="hidden" name="group_id" id="deleteGroupId" value="{{ group.id }}">-->
+                    <input type="hidden" name="activity_id" id="deleteActivityId" value="{{ activity.id }}">
+                    <div class="modal-actions">
+                        <button type="button" class="modal-button annulla" onclick="closeDeleteModal()">Annulla</button>
+                        <button type="submit" id="procediButton" class="modal-button procedi">Procedi</button>
+                    </div>
+                </form>
+              </div>
+            </div>
+
         </section>
     </main>
+
+<script>
+// Open delete confirmation modal.
+// event: the click event on the bin (used to stop propagation)
+// groupId: integer or null
+function openDeleteModal(event, activityId) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  var overlay = document.getElementById('deleteModalOverlay');
+  var input = document.getElementById('deleteActivityId');
+  var procedi = document.getElementById('procediButton');
+
+  if (activityId === null || activityId === undefined || activityId === '') {
+    // No valid id: disable proceed to avoid accidental submission
+    input.value = '';
+    procedi.setAttribute('disabled', 'disabled');
+  } else {
+    input.value = String(activityId);
+    procedi.removeAttribute('disabled');
+  }
+
+  overlay.classList.add('open');
+  // Move focus to the cancel button for accessibility
+  var cancelBtn = document.querySelector('.modal-button.annulla');
+  if (cancelBtn) cancelBtn.focus();
+}
+
+// Close the modal without action
+function closeDeleteModal() {
+  var overlay = document.getElementById('deleteModalOverlay');
+  overlay.classList.remove('open');
+}
+
+// Prevent form submission if group_id is empty (safety)
+document.getElementById('deleteForm').addEventListener('submit', function(e){
+  var input = document.getElementById('deleteActivityId');
+  if (!input.value) {
+    e.preventDefault();
+    closeDeleteModal();
+  }
+});
+</script>
 
 </body>
 </html>

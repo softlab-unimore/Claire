@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import UserProfile, Group, Activity
 
 import uuid
+from pathlib import Path
 
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=100)
@@ -171,10 +172,10 @@ class PostActivityForm(forms.Form):
    description = forms.CharField()
    text = forms.CharField()
 
-   phases = forms.FileField()
-   criteria = forms.FileField()
-   interaction = forms.FileField()
-   logic = forms.FileField()
+   phases = forms.FileField(widget=forms.ClearableFileInput(attrs={'accept': '.xls,.xlsx'}))
+   criteria = forms.FileField(widget=forms.ClearableFileInput(attrs={'accept': '.xls,.xlsx'}))
+   interaction = forms.FileField(widget=forms.ClearableFileInput(attrs={'accept': '.xls,.xlsx'}))
+   logic = forms.FileField(widget=forms.ClearableFileInput(attrs={'accept': '.xls,.xlsx'}))
 
    def clean(self):
        cleaned_data = super().clean()
@@ -183,15 +184,17 @@ class PostActivityForm(forms.Form):
        name = cleaned_data.get('name')
        description = cleaned_data.get('description')
        text = cleaned_data.get('text')
-       
+
+       allowed_exts = ['.xls', '.xlsx']
+
        if not name or not description or not text:
            raise forms.ValidationError("All fields are required.")
 
        for field in required_files:
            file = cleaned_data.get(field)
            if not file:
-               raise forms.ValidationError("no files All fields are required.")
-           if not file.name.endswith('.csv') or file.content_type != 'text/csv':
-               raise forms.ValidationError(f"All uploaded files must be CSV files.")
+               raise forms.ValidationError("No parsable file provided.")
+           if Path(file.name).suffix.lower() not in allowed_exts:
+               raise forms.ValidationError(f"All uploaded files must be Excel files (.xls, .xlsx).")
 
        return cleaned_data

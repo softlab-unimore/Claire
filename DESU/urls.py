@@ -19,5 +19,5 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-   path("/activity/", include("activity.urls")),
+   path("activity/", include("activity.urls")),
 ]

@@ -6,7 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reciprocal Learning</title>
-    <link rel="stylesheet" href="{% static 'activity/members.css' %}">
+    <link rel="stylesheet" href="{% static 'activity/base.css' %}">
+    <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
 <body>
@@ -25,14 +26,68 @@
 
         <form action="{% url 'new_activity' %}" method="POST" enctype="multipart/form-data">
            {% csrf_token %}
-           {{ form.as_p }}
-           <input type="hidden" name="group_id" value="{{ group_id }}">
-           <input type="hidden" name="activity_id" value="{{ activity_id }}">
-           <button class="back-button">Salva</button>
+
+          {% if form.non_field_errors %}
+            <div class="container-card" style="background:#fff3f3;border:1px solid #ffcccc;padding:12px;border-radius:8px;margin-bottom:12px;">
+              <strong>Errore:</strong>
+              <ul>
+                {% for err in form.non_field_errors %}
+                  <li>{{ err }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          <div style="color:#b00020; margin-bottom:6px;">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <div>{{ field.label }}: {{ error }}</div>
+              {% endfor %}
+            {% endfor %}
+          </div>
+
+           <div class="container-card">
+             <label for="id_name">Titolo attività</label>
+             {{ form.name }}
+
+             <label for="id_description">Descrizione</label>
+             {{ form.description }}
+
+             <label for="id_text">Testo</label>
+             {{ form.text }}
+
+             <hr />
+
+             <label for="id_phases">File fasi</label>
+             <div style="display:flex;gap:12px;align-items:center;">
+               {{ form.phases }}
+             </div>
+
+             <label for="id_criteria">File criteri</label>
+             <div style="display:flex;gap:12px;align-items:center;">
+               {{ form.criteria }}
+             </div>
+
+             <label for="id_interaction">File interazioni</label>
+             <div style="display:flex;gap:12px;align-items:center;">
+               {{ form.interaction }}
+             </div>
+
+             <label for="id_logic">File logica</label>
+             <div style="display:flex;gap:12px;align-items:center;">
+               {{ form.logic }}
+             </div>
+
+             <input type="hidden" name="group_id" value="{{ group_id }}">
+             <input type="hidden" name="activity_id" value="{{ activity_id }}">
+
+             <div style="margin-top:18px;display:flex;gap:12px;">
+               <button type="submit" class="back-button">Salva</button>
+               <a href="{% url 'index' %}" class="back-button" role="button">Annulla</a>
+             </div>
+
+           </div>
         </form>
-        <a href="{% url 'index' %}">
-        <button class="button-secondary">Annulla</button>
-        </a>
 
     </main>
 

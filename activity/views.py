@@ -198,7 +198,9 @@ def get_new_activity(request):
                     logic=logic
                 )
 
-            return redirect(index)
+            activities = Activity.objects.filter(group_id=group_id)
+            return render(request, "activity/activity.html",
+                          {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id})
 
         context = {"form": form, "role": request.user.userprofile.role, "group_id": request.POST["group_id"]}
     else:
@@ -301,8 +303,9 @@ def get_chat(request):
                 })
             else:
                 request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity)
-                request.session["messages"] = request.session["messages"][:-1]
-                request.session["messages"].append(request.session["total_messages"][-2])
+                if previous_interaction != -1:
+                    request.session["messages"] = request.session["messages"][:-1]
+                    request.session["messages"].append(request.session["total_messages"][-2])
                 request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"]+1, request.session["messages"], request.session["total_messages"], activity=activity)
             request.session.modified = True
             request.session["previous_interaction"] = None
@@ -350,3 +353,30 @@ def download_total_messages(request):
     response = HttpResponse(content, content_type='application/json')
     response['Content-Disposition'] = 'attachment; filename="total_messages.json"'
     return response
+
+@login_required
+def delete_class(request):
+    if request.method != "POST":
+        return redirect(index)
+    group_id = request.POST.get('group_id')
+    group = get_object_or_404(Group, id=group_id)
+    if request.user.userprofile not in group.userprofiles.all() and request.user.userprofile.role != "teacher":
+         return HttpResponseForbidden("You are not allowed to delete this class.")
+    group.delete()
+    return redirect(index)
+
+@login_required
+def delete_activity(request):
+    if request.method != "POST":
+        return redirect(index)
+    activity_id = request.POST.get('activity_id')
+    activity = get_object_or_404(Activity, id=activity_id)
+    group_id = activity.group_id
+
+    if request.user.userprofile not in activity.group_id.userprofiles.all() and request.user.userprofile.role != "teacher":
+         return HttpResponseForbidden("You are not allowed to delete this activity.")
+    activity.delete()
+
+    activities = Activity.objects.filter(group_id=group_id)
+    return render(request, "activity/activity.html",
+                  {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id})

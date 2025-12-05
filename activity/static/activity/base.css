@@ -1,0 +1,175 @@
+/* Unified base stylesheet for the site
+   - Provides a shared set of colors, spacing, and components
+   - Keeps a light, neutral palette and responsive layout
+   - Adds phase animations for the chat (applied via .phase-N class)
+*/
+
+:root{
+  --bg: #ffffff; /* page background */
+  --surface: #ffffff; /* cards */
+  --muted: #f5f5f7; /* subtle surfaces */
+  --text: #222222; /* main text */
+  --muted-text: #6b6b6b; /* secondary text */
+  --accent: #9d6eff; /* primary accent (used sparingly) */
+  --accent-2: #a87bff;
+  --shadow: 0 6px 20px rgba(20,20,20,0.06);
+  --radius: 12px;
+  --gap: 18px;
+}
+
+/* Reset and base */
+*{box-sizing:border-box}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow: hidden; /* prevent whole-page scrolling */
+}
+
+/* Page layout */
+.page-content{display:flex;gap:20px;padding:20px;align-items:flex-start;height:100vh;overflow:hidden}
+.sidebar{
+  width:7%;min-width:88px;background:var(--muted);display:flex;flex-direction:column;align-items:center;padding-top:20px;border-radius:0;box-shadow:2px 0 10px rgba(0,0,0,0.03);height:100vh;flex-shrink:0;overflow:auto
+}
+.left{width:32%;min-width:220px;max-width:380px;display:flex;flex-direction:column;gap:12px;height:100vh;box-sizing:border-box}
+
+/* Ensure only textbox scrolls */
+.textbox{padding:16px;overflow-y:auto;flex-grow:1}
+.chat-container{display:flex;flex-direction:column;gap:12px;align-items:flex-end;height:100vh;box-sizing:border-box}
+.chat-box{flex:1;overflow-y:auto}
+
+/* Main content */
+.main-content{flex:1;padding:20px;min-width:0}
+h1,h2{margin:0 0 12px 0;color:var(--text)}
+.container-card{background:var(--surface);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow); width:100%}
+
+/* Buttons */
+.button,button{display:inline-flex;align-items:center;justify-content:center;border-radius:12px;padding:10px 14px;border:none;background:var(--accent);color:white;cursor:pointer}
+.button.secondary{background:linear-gradient(135deg,#cfc7ff,#e6dfff);color:#4f445f}
+
+/* Forms */
+input,textarea,select{font-family:inherit;border:1px solid #e6e6e8;padding:12px;border-radius:10px;background:#fbfbfb;color:var(--text);outline:none}
+input:focus,textarea:focus{box-shadow:0 0 0 4px rgba(158,110,255,0.08);border-color:var(--accent-2)}
+
+/* Login specific layout (kept for compatibility) */
+.auth-container{background:var(--surface);padding:32px;border-radius:14px;box-shadow:0 8px 28px rgba(10,10,10,0.06);width:100%;max-width:420px;margin:32px auto}
+.auth-card h2{text-align:center;color:var(--text);margin-bottom:18px}
+.auth-button{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;border-radius:10px;padding:12px 14px;border:none;cursor:pointer}
+
+/* Chat layout - responsive */
+.chat-page{display:flex;flex-direction:column;height:100%}
+.page-content{height:100vh}
+.left{width:32%;min-width:220px;max-width:380px;display:flex;flex-direction:column;gap:12px;height:100vh;box-sizing:border-box}
+.main-content.chat-page{flex:1;display:flex;flex-direction:column}
+.chat-container{display:flex;flex-direction:column;gap:12px;align-items:flex-end;height:100vh;box-sizing:border-box}
+.chat-box{flex:1;overflow-y:auto;background:var(--surface);padding:18px;border-radius:16px;box-shadow:var(--shadow);overflow:auto;max-height:68vh;width:100%;display:flex;flex-direction:column;gap:12px}
+.chat-input-form{display:flex;gap:12px;align-items:center;background:var(--surface);border-radius:14px;padding:14px;box-shadow:0 6px 20px rgba(0,0,0,0.04)}
+.chat-input{flex:1;min-height:48px;border-radius:12px;padding:12px;background:#fafafa}
+.send-button{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;padding:10px 16px;border-radius:20px;border:none;cursor:pointer}
+.send-button:disabled{opacity:0.6;cursor:not-allowed}
+
+/* Message bubbles */
+.chat-message{max-width:72%;padding:12px 14px;border-radius:16px;line-height:1.4;word-break:break-word;box-shadow:0 2px 8px rgba(0,10,10,0.04)}
+.bot-message{align-self:flex-start;background:#f3f3f5;color:var(--text);border-bottom-left-radius:6px}
+.user-message{align-self:flex-end;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;border-bottom-right-radius:6px}
+
+.no-messages{color:#999;text-align:center}
+
+/* Side image */
+.side-image{width:100%;height:auto;border-radius:8px;object-fit:cover}
+.image-wrapper{display:flex;justify-content:center}
+
+/* Phase animations - subtle ring or pulse on chat-box */
+@keyframes phasePulse2{0%{box-shadow:0 6px 20px rgba(157,110,255,0.08)}50%{box-shadow:0 12px 30px rgba(157,110,255,0.14)}100%{box-shadow:0 6px 20px rgba(157,110,255,0.08)}}
+@keyframes phasePulse3{0%{box-shadow:0 6px 20px rgba(255,216,107,0.06)}50%{box-shadow:0 12px 30px rgba(255,216,107,0.12)}100%{box-shadow:0 6px 20px rgba(255,216,107,0.06)}}
+@keyframes phasePulse4{0%{box-shadow:0 6px 20px rgba(244,143,177,0.06)}50%{box-shadow:0 12px 30px rgba(244,143,177,0.12)}100%{box-shadow:0 6px 20px rgba(244,143,177,0.06)}}
+
+.phase-2 .chat-box{animation:phasePulse2 2.2s ease-in-out infinite}
+.phase-3 .chat-box{animation:phasePulse3 2.2s ease-in-out infinite}
+.phase-4 .chat-box{animation:phasePulse4 2.2s ease-in-out infinite}
+
+/* Phase badge (small animated indicator inside chat) */
+.phase-indicator{
+  display:inline-flex;align-items:center;gap:10px;padding:8px 12px;border-radius:999px;background:rgba(0,0,0,0.04);font-weight:600;color:var(--muted-text);font-size:13px;margin-bottom:8px}
+.phase-indicator .dot{width:12px;height:12px;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.phase-indicator .label{opacity:0.95}
+
+/* Phase-specific dot colors */
+body.phase-2 .phase-indicator{background:linear-gradient(90deg, rgba(157,110,255,0.06), rgba(157,110,255,0.03));color: #6b3a7a}
+body.phase-2 .phase-indicator .dot{background:linear-gradient(135deg,#9d6eff,#a87bff);animation:phasePulse2 2.2s infinite}
+
+body.phase-3 .phase-indicator{background:linear-gradient(90deg, rgba(255,216,107,0.06), rgba(255,216,107,0.03));color:#8a6500}
+body.phase-3 .phase-indicator .dot{background:linear-gradient(135deg,#ffd54f,#ffca28);animation:phasePulse3 2.2s infinite}
+
+body.phase-4 .phase-indicator{background:linear-gradient(90deg, rgba(244,143,177,0.06), rgba(244,143,177,0.03));color:#7a2f4a}
+body.phase-4 .phase-indicator .dot{background:linear-gradient(135deg,#f48fb1,#f06292);animation:phasePulse4 2.2s infinite}
+
+/* Phase animations visibility and entrance */
+.phase-animation{display:flex;align-items:center;justify-content:center;padding:12px}
+.phase-animation .phase-anim{display:none;width:100%;max-width:340px;height:auto;transition:transform .36s ease,opacity .36s ease;opacity:0;transform:translateY(8px) scale(.98)}
+
+/* Show only the svg matching the current phase */
+body.phase-2 .phase-anim-2,
+body.phase-3 .phase-anim-3,
+body.phase-4 .phase-anim-4{display:block;opacity:1;transform:translateY(0) scale(1)}
+
+/* Entrance animation when animate-once is toggled */
+.animate-once .phase-anim{animation:phaseEntrance .6s both}
+@keyframes phaseEntrance{0%{opacity:0;transform:translateY(18px) scale(.94)}50%{opacity:1;transform:translateY(-6px) scale(1.02)}100%{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Bigger emphasis pulse for phase change */
+@keyframes phaseBigPulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:0.98}100%{transform:scale(1);opacity:1}}
+body.phase-2 .phase-anim-2.animate-large,
+body.phase-3 .phase-anim-3.animate-large,
+body.phase-4 .phase-anim-4.animate-large{animation:phaseBigPulse 1.6s ease-in-out infinite}
+
+/* Story card styling to resemble the attached image */
+.textbox.container-card{background:#ffffff;border-radius:16px;padding:28px 26px;box-shadow:0 10px 30px rgba(34,34,34,0.06);min-height:300px;display:flex;flex-direction:column;justify-content:space-between}
+.story-text{font-size:24px;line-height:1.35;color:#111827;padding-right:8px}
+
+.story-footer{display:flex;align-items:center;gap:12px;margin-top:18px}
+.progress{flex:1;height:14px;background:#e9f1fb;border-radius:999px;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,#5fa8e6,#2f7fc4);border-radius:999px;transition:width .4s ease}
+.page-num{width:36px;text-align:right;font-weight:700;color:#2b4b63}
+
+/* Make sure phase indicator sits visually with a friendly size */
+.phase-indicator{font-size:14px;padding:10px 14px;border-radius:999px}
+.phase-indicator .dot{width:14px;height:14px}
+
+/* Ensure svg scales up for emphasis on larger screens */
+@media (min-width:1100px){
+  .phase-animation .phase-anim{max-width:420px}
+}
+
+/* Ensure chat input sticks to the bottom on small screens */
+@media (max-width:900px){
+  .chat-input-form{position:sticky;bottom:0;background:var(--surface);padding:12px;margin-top:8px}
+}
+
+/* small screens: stack and adapt */
+@media (max-width: 900px){
+  .page-content{flex-direction:column;padding:12px}
+  .left{width:100%;max-width:none;min-width:0}
+  .sidebar{display:flex;flex-direction:row;width:100%;height:auto;padding:8px;gap:12px}
+  .main-content{padding:12px}
+  .chat-box{max-height:50vh}
+}
+
+/* Caps lock toggle: when body.caps-on is active, render most visible text uppercase.
+   Exclude form controls (input, textarea, select, button) and elements marked
+   with .no-caps to allow exceptions. */
+body.caps-on .story-text,
+body.caps-on .chat-box .chat-message,
+body.caps-on .chat-box .message-content {
+  text-transform: uppercase !important;
+}
+
+/* Utilities */
+.text-muted{color:var(--muted-text)}
+.center{display:flex;align-items:center;justify-content:center}
+
+/* end of base.css */
