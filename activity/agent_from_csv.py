@@ -19,6 +19,7 @@ class AgentFromCsv:
             "temperature": float(os.environ["OPENAI_TEMPERATURE"]),
         }
         self.model = OpenAIModel(**attr)
+        self.num_stages = None
 
         #self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
 
@@ -50,6 +51,7 @@ class AgentFromCsv:
             interaction = pd.read_csv(io.BytesIO(dataset.interaction))
             logic = pd.read_csv(io.BytesIO(dataset.logic))
 
+        self.num_stages = len(phases)
         return phases, criteria, interaction, logic
 
     def apply_phase(self, current_phase, messages, total_messages, activity):
@@ -138,6 +140,7 @@ class AgentFromCsv:
                 "sender": "system"
             })
             print(result)
+            explanation = result
             result = self.model.extract_result(result, "risposta finale:")
             results.append(result)
             messages = messages[:-1]
@@ -153,7 +156,7 @@ class AgentFromCsv:
         if suitability_counter >= 3:
             suitability = True
 
-        return messages, total_messages, results[0], suitability # currently, the method works only with one criteria for each phase
+        return messages, total_messages, results[0], suitability, explanation # currently, the method works only with one criteria for each phase
 
     def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity):
         _, _, interaction_df, _ = self.load_df(activity)

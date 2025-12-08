@@ -14,6 +14,7 @@ from .prompts.prompts_csv.system_prompt import system_prompt
 from django.http import HttpResponse
 import json
 
+import pandas as pd   # NEW
 import io
 
 def get_login(request):
@@ -230,6 +231,7 @@ def get_chat(request):
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
             request.session["suitability_counter"] = 0
+            request.session["criteria_data"] = []
 
         if "messages" not in request.session or len(request.session["messages"]) == 0:
             system_message = {
@@ -245,6 +247,7 @@ def get_chat(request):
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
             request.session["suitability_counter"] = 0
+            request.session["criteria_data"] = []
 
         if agent.is_activity_finished(request.session["stage"], activity):
             messages_to_send = [{
@@ -274,13 +277,16 @@ def get_chat(request):
         })
         request.session.modified = True
 
-        request.session["messages"], request.session["total_messages"], criteria, suitability = agent.apply_criteria(
+        request.session["messages"], request.session["total_messages"], criteria, suitability, explanation = agent.apply_criteria(
             request.session["stage"],
             request.session["messages"],
             request.session["total_messages"],
             activity=activity,
             suitability_counter=request.session["suitability_counter"]
         )
+
+        request.session["criteria_data"].append([request.session["messages"], explanation, criteria, suitability])
+
         if not suitability:
             request.session["suitability_counter"] += 1
             if previous_interaction is None:
@@ -301,6 +307,32 @@ def get_chat(request):
                     "text": "BOT: Complimenti! Hai terminato l'attività!",
                     "sender": "bot",
                 })
+
+                criteria_data = request.session.get("criteria_data", [])
+
+                if criteria_data:
+                    df = pd.DataFrame(
+                        criteria_data,
+                        columns=["messages", "explanation", "criteria", "suitability"]
+                    )
+
+                    output = io.BytesIO()
+                    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                        df.to_excel(writer, index=False)
+
+                    excel_bytes = output.getvalue()
+
+                    useractivity, _ = UserActivity.objects.get_or_create(
+                        user_id=request.user,
+                        activity_id=activity,
+                    )
+                    useractivity.status = useractivity.Status.DONE
+                    useractivity.criteria_excel = excel_bytes
+                    useractivity.save()
+
+                    """if useractivity.criteria_excel:
+                        debug_df = pd.read_excel(io.BytesIO(useractivity.criteria_excel))
+                        print("DEBUG criteria_excel head:\n", debug_df.head())"""
             else:
                 request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity)
                 if previous_interaction != -1:
@@ -341,7 +373,8 @@ def get_chat(request):
         "messages": messages_to_send,
         "blocked": blocked,
         "stage": request.session["stage"],
-        "non_modifiable_output": request.session["non_modifiable_output"]
+        "non_modifiable_output": request.session["non_modifiable_output"],
+        "num_stages": agent.num_stages,
     } | additional_context)
 
 @login_required

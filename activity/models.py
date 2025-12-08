@@ -35,6 +35,7 @@ class UserActivity(models.Model):
    status = models.CharField(max_length=2, choices=Status, default=Status.IN_PROGRESS)
    activity_id = models.ForeignKey(Activity, on_delete=models.CASCADE)
    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+   criteria_excel = models.BinaryField(null=True, blank=True)
 
 class Dataset(models.Model):
    phases = models.BinaryField()

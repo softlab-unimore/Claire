@@ -19,7 +19,7 @@
 <body class="phase-{{ stage|default:0 }}">
 
   <aside class="sidebar">
-    <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
+    <img src="{% static 'activity/generic-avatar.png' %}" alt="Account Icon" class="account-icon">
     <div class="account-text">Account</div>
 
     <a href="{% url 'logout' %}">
@@ -77,7 +77,7 @@
     <main class="main-content chat-page">
       <!--<h1 class="chat-title">Conversazione</h1>-->
 
-      <div class="textbox">
+      <div class="textbox" id="textbox">
         {% if stage and stage|add:0 > 1 %}
           <div class="phase-indicator" role="status" aria-live="polite">
             <span class="dot" aria-hidden="true"></span>
@@ -85,11 +85,12 @@
           </div>
         {% endif %}
 
+        <!-- CHANGED: enable the chat container so JS can scroll it to bottom -->
         <!--<div class="chat-box" id="chat-box">-->
           {% for message in messages %}
             <div class="message-row {% if message.sender == 'user' %}row-user{% else %}row-bot{% endif %}">
               {% if message.sender != 'user' %}
-                <img src="{% static 'activity/generic-avatar0.png' %}" alt="Avatar" class="msg-avatar">
+                <img src="{% static 'activity/avatar.png' %}" alt="Avatar" class="msg-avatar">
               {% endif %}
               <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
                 <div class="message-content">{{ message.text }}</div>
@@ -99,6 +100,7 @@
             <p class="no-messages">Nessun messaggio</p>
           {% endfor %}
         <!--</div>-->
+
       </div>
       <div style="margin-top: 10px;">
         <form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="return disableButton();">
@@ -140,13 +142,14 @@
 
   document.addEventListener("DOMContentLoaded", function() {
       // Auto-scroll to the bottom on page load
-      const chatBox = document.getElementById('chat-box');
+      const chatBox = document.getElementById('textbox');
       if (chatBox) {
-        chatBox.scrollTop = chatBox.scrollHeight;
+        setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 0);
+        // chatBox.scrollTop = chatBox.scrollHeight;
       }
 
       // set progress bar based on stage and total phases (assume 4 phases)
-      const totalPhases = 4;
+      const totalPhases = {{ num_stages }};
       const stageRaw = {{ stage|default:0 }};
       const stageNum = Number(stageRaw) || 0;
       const progressPercent = Math.min(100, Math.round((stageNum / totalPhases) * 100));
