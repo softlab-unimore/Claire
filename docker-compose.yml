@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    container_name: desu_web
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+    volumes:
+      - ./db:/app/db   # Mount volume to store SQLite DB
+
+#volumes:
+#  desu_data:
