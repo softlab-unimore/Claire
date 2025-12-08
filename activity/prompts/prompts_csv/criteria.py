@@ -4,6 +4,7 @@ La valutazione si basa sul criterio "{criteria_name}". Il criterio viene analizz
 
 {l_descriptions}
 
-Prima ragiona step-by-step. Infine, scrivi "Risposta finale: " seguito esclusivamente dal nome dell'indicatore di valutazione ("L1", "L2", ..., "Ln") oppure dalla scritta "non inerente" se la risposta è completamente non inerente alla domanda.
+Inoltre, esiste il criterio "non inerente", che si applica quando la risposta del bambino non è per nulla collegata alla domanda posta.
+Prima ragiona step-by-step. Infine, scrivi "Risposta finale: " seguito esclusivamente dal nome dell'indicatore di valutazione ("L1", "L2", ..., "Ln", "non inerente")
 Non scrivere nient'altro dopo "Risposta finale: ".
 """
