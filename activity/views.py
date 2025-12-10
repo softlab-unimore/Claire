@@ -404,7 +404,7 @@ def delete_activity(request):
         return redirect(index)
     activity_id = request.POST.get('activity_id')
     activity = get_object_or_404(Activity, id=activity_id)
-    group_id = activity.group_id
+    group_id = activity.group_id.id
 
     if request.user.userprofile not in activity.group_id.userprofiles.all() and request.user.userprofile.role != "teacher":
          return HttpResponseForbidden("You are not allowed to delete this activity.")
