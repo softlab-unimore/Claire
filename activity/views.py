@@ -218,6 +218,7 @@ def get_new_activity(request):
 def get_chat(request):
     agent = AgentFromCsv()
     non_modifiable_output = None
+    different_non_modifiable_output = False
     if "non_modifiable_output" not in request.session:
         request.session["non_modifiable_output"] = None
 
@@ -299,14 +300,15 @@ def get_chat(request):
 
         if next_interaction == "next" or agent.are_interactions_too_many(activity, request.session["stage"], request.session["num_interactions"]):
             if agent.is_activity_finished(request.session["stage"]+1, activity):
-                request.session["messages"].append({
+                """request.session["messages"].append({
                     "text": "BOT: Complimenti! Hai terminato l'attività!",
                     "sender": "bot",
                 })
                 request.session["total_messages"].append({
                     "text": "BOT: Complimenti! Hai terminato l'attività!",
                     "sender": "bot",
-                })
+                })"""
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, end=True)
 
                 criteria_data = request.session.get("criteria_data", [])
 
@@ -339,6 +341,10 @@ def get_chat(request):
                     request.session["messages"] = request.session["messages"][:-1]
                     request.session["messages"].append(request.session["total_messages"][-2])
                 request.session["messages"], request.session["total_messages"], non_modifiable_output = agent.apply_phase(request.session["stage"]+1, request.session["messages"], request.session["total_messages"], activity=activity)
+                if "non_modifiable_output" in request.session and non_modifiable_output.lower().strip() != request.session["non_modifiable_output"].lower().strip():
+                    different_non_modifiable_output = True
+                else:
+                    different_non_modifiable_output = False
             request.session.modified = True
             request.session["previous_interaction"] = None
             request.session["stage"] += 1
@@ -375,6 +381,7 @@ def get_chat(request):
         "stage": request.session["stage"],
         "non_modifiable_output": request.session["non_modifiable_output"],
         "num_stages": agent.num_stages,
+        "different_non_modifiable_output": different_non_modifiable_output,
     } | additional_context)
 
 @login_required

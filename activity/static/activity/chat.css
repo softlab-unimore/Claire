@@ -72,6 +72,33 @@
   justify-content: center;
 }
 
+.msg-avatar--spacer {
+  visibility: hidden;
+}
+
+.soft-red-box {
+    background: #f26b6b;          /* soft red */
+    color: #ffffff;
+    max-width: 100%;
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin-top: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: "Atkinson Hyperlegible";
+    font-size: 15px;
+    word-break: break-word;
+    /*font-weight: 600;*/
+    line-height: 1.4;
+    /*box-shadow: 0 6px 18px rgba(242, 107, 107, 0.25);*/
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.soft-red-box__text {
+    margin: 0;
+}
+
 .side-image {
   max-width: 100%;
   max-height: 150px; /* or adjust as needed */

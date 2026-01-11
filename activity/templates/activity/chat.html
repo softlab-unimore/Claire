@@ -30,21 +30,6 @@
   <div class="page-content">
 
     <div class="left">
-      <!-- REPLACED: use Lottie animation for clarity -->
-      <!--<div class="phase-animation" aria-hidden="true">
-        <div class="lottie-wrapper">
-          <lottie-player id="reading-lottie" src="https://assets4.lottiefiles.com/packages/lf20_touohxv0.json"  background="transparent"  speed="1"  style="width:100%; height:220px;"  loop  autoplay></lottie-player>
-          <div class="sparkles-wrapper" aria-hidden="true">
-            <span class="sparkle" style="left:6%; top:12%; background:#ffd36a"></span>
-            <span class="sparkle" style="left:18%; top:6%; background:#6fc3ff"></span>
-            <span class="sparkle" style="left:36%; top:20%; background:#ff8c66"></span>
-            <span class="sparkle" style="left:60%; top:8%; background:#9fd3ff"></span>
-            <span class="sparkle" style="left:78%; top:18%; background:#ffd36a"></span>
-            <span class="sparkle" style="left:86%; top:6%; background:#a7f39b"></span>
-          </div>
-        </div>
-      </div>-->
-
       <div class="textbox container-card" role="region" aria-label="Story">
         {% if non_modifiable_output %}
           <div class="story-text">{{ non_modifiable_output }}</div>
@@ -85,7 +70,6 @@
           </div>
         {% endif %}
 
-        <!-- CHANGED: enable the chat container so JS can scroll it to bottom -->
         <!--<div class="chat-box" id="chat-box">-->
           {% for message in messages %}
             <div class="message-row {% if message.sender == 'user' %}row-user{% else %}row-bot{% endif %}">
@@ -99,6 +83,14 @@
           {% empty %}
             <p class="no-messages">Nessun messaggio</p>
           {% endfor %}
+          {% if different_non_modifiable_output %}
+            <div class="message-row row-bot">
+              <img src="{% static 'activity/avatar.png' %}" alt="Avatar" class="msg-avatar msg-avatar--spacer">
+              <div class="soft-red-box">
+                <p class="soft-red-box__text">Leggi il nuovo testo sulla sinistra e rispondi</p>
+              </div>
+            </div>
+          {% endif %}
         <!--</div>-->
 
       </div>

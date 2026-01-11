@@ -158,10 +158,10 @@ class AgentFromCsv:
 
         return messages, total_messages, results[0], suitability, explanation # currently, the method works only with one criteria for each phase
 
-    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity):
+    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, end=False):
         _, _, interaction_df, _ = self.load_df(activity)
 
-        if interaction_name == "next":
+        if interaction_name == "next" and not end:
             messages.append({
                 "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
                 "sender": "system"
@@ -171,23 +171,34 @@ class AgentFromCsv:
                 "sender": "system"
             })
             return messages, total_messages, -1
-
-        rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
-        assert len(rows_interaction) == 1
-        rows_interaction = rows_interaction.iloc[0,:]
-        attr = {
-            "interaction_name": interaction_name,
-            "interaction_description": rows_interaction["Descrizione"],
-        }
-        prompt = interaction_prompt.format(**attr)
-        messages.append({
-            "text": prompt,
-            "sender": "system"
-        })
-        total_messages.append({
-            "text": prompt,
-            "sender": "system"
-        })
+        elif interaction_name == "next":
+            messages.append({
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
+                "sender": "system"
+            })
+            total_messages.append({
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
+                "sender": "system"
+            })
+        else:
+            rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
+            assert len(rows_interaction) == 1
+            rows_interaction = rows_interaction.iloc[0,:]
+            attr = {
+                "interaction_name": interaction_name,
+                "interaction_description": rows_interaction["Descrizione"],
+            }
+            prompt = interaction_prompt.format(**attr)
+            if end:
+                prompt += "\nAlla fine, devi finire il tuo messaggio concludendo l'attività. Devi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\"."
+            messages.append({
+                "text": prompt,
+                "sender": "system"
+            })
+            total_messages.append({
+                "text": prompt,
+                "sender": "system"
+            })
         prompt = "\n".join([message["text"] + "\n" for message in messages])
         result = self.model.query(prompt)
         messages = messages[:-1]
