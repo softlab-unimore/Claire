@@ -6,9 +6,6 @@ import timeout_decorator
 import os
 from .prompts.prompt_check import prompt_stage1, prompt_stage2, prompt_stage3, prompt_stage4
 
-from django.http import StreamingHttpResponse
-from django.views.decorators.csrf import csrf_exempt
-
 load_dotenv()
 
 class OpenAIModel(BaseModel):
@@ -78,43 +75,24 @@ class OpenAIModel(BaseModel):
         print(result)
         return self.extract_result(result, "risposta finale: ") == "vai alla fase successiva"
 
-    @csrf_exempt
     def call_gpt_stream(self, prompt: str):
-        """
-        Generator that yields partial text chunks from the OpenAI streaming API.
-        """
-        def generator(prompt: str):
-            stream_resp = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=self.temperature if "5" not in self.model_name else 1.0,
-                stream=True,
-            )
+        stream = self.client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature if "5" not in self.model_name else 1.0,
+            stream=True,
+            # stream_options={"include_usage": True},  # optional; see note below
+        )
 
-            for chunk in stream_resp:
-                # chunk structure may vary between client versions; try to extract text robustly
-                text_piece = ""
-                try:
-                    # new-style: chunk.choices[0].delta.content or dict-like
-                    delta = getattr(chunk.choices[0], "delta", None) or (chunk.choices[0].get("delta") if isinstance(chunk.choices[0], dict) else None)
-                    if isinstance(delta, dict):
-                        text_piece = delta.get("content", "") or ""
-                    else:
-                        text_piece = getattr(delta, "content", "") or ""
-                except Exception:
-                    # fallback: some libs may stream full message fragments differently
-                    try:
-                        text_piece = getattr(chunk.choices[0], "text", "") or chunk.choices[0].get("text", "")
-                    except Exception:
-                        raise RuntimeError("Unable to extract text from OpenAI stream chunk")
-                        #text_piece = ""
+        for chunk in stream:
+            # If you ever use include_usage=True, the last chunk may have choices=[]
+            if not getattr(chunk, "choices", None):
+                continue
 
-                if text_piece:
-                    yield text_piece
-
-        # final newline/marker optionally
-        #yield ""
-        return StreamingHttpResponse(generator(), content_type="text/plain; charset=utf-8")
+            delta = chunk.choices[0].delta  # ChoiceDelta
+            text_piece = getattr(delta, "content", None)
+            if text_piece:
+                yield text_piece
 
 attr = {
     "model_name": os.environ["OPENAI_MODEL_NAME"],

@@ -54,7 +54,7 @@ class AgentFromCsv:
         self.num_stages = len(phases)
         return phases, criteria, interaction, logic
 
-    def apply_phase(self, current_phase, messages, total_messages, activity):
+    def apply_phase(self, current_phase, messages, total_messages, activity, streaming=False):
         phases_df, _, _, _ = self.load_df(activity)
         phase_row = phases_df[phases_df["Fase"] == current_phase]
         assert len(phase_row) == 1
@@ -75,34 +75,64 @@ class AgentFromCsv:
             "sender": "system"
         })
         prompt = "\n".join([message["text"]+"\n" for message in messages])
-        result = self.model.query(prompt)
         messages = messages[:-1]
         if messages[-1]["sender"] == "system":
             messages = messages[:-1]
 
-        messages.append({
-            "text": "BOT: "+result,
-            "sender": "bot"
-        })
-        total_messages.append({
-            "text": "BOT: "+result,
-            "sender": "bot"
-        })
-
         if phase_row["Input non modificabile"] != "":
             non_modifiable_output = phase_row["Input non modificabile"]
-            messages.append({
-                "text": phase_row["Input non modificabile"],
-                "sender": "system"
-            })
-            total_messages.append({
-                "text": phase_row["Input non modificabile"],
-                "sender": "system"
-            })
         else:
             non_modifiable_output = None
 
-        return messages, total_messages, non_modifiable_output
+        if not streaming:
+            result = self.model.query(prompt)
+
+            messages.append({
+                "text": "BOT: "+result,
+                "sender": "bot"
+            })
+            total_messages.append({
+                "text": "BOT: "+result,
+                "sender": "bot"
+            })
+
+            if non_modifiable_output is not None:
+                messages.append({
+                    "text": non_modifiable_output,
+                    "sender": "system"
+                })
+                total_messages.append({
+                    "text": non_modifiable_output,
+                    "sender": "system"
+                })
+
+            return messages, total_messages, non_modifiable_output
+
+        acc = []
+
+        def token_gen():
+            # IMPORTANT: you need a streaming iterator from your model
+            # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
+            for chunk in self.model.call_gpt_stream(prompt):
+                # chunk should be a string token/partial
+                if not chunk:
+                    continue
+                acc.append(chunk)
+                yield chunk
+
+        def finalize(non_modifiable_output=non_modifiable_output):
+            result = "".join(acc)
+            bot_text = "BOT: " + result
+            messages.append({"text": bot_text, "sender": "bot"})
+            total_messages.append({"text": bot_text, "sender": "bot"})
+
+            if non_modifiable_output is not None:
+                messages.append({"text": non_modifiable_output, "sender": "system"})
+                total_messages.append({"text": non_modifiable_output, "sender": "system"})
+
+            return messages, total_messages
+
+        return token_gen(), finalize, non_modifiable_output
 
     def apply_criteria(self, current_phase, messages, total_messages, activity, suitability_counter):
         _, criteria_df, _, _ = self.load_df(activity)
@@ -158,7 +188,7 @@ class AgentFromCsv:
 
         return messages, total_messages, results[0], suitability, explanation # currently, the method works only with one criteria for each phase
 
-    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, end=False):
+    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, end=False, streaming=False, skip=False):
         _, _, interaction_df, _ = self.load_df(activity)
 
         if interaction_name == "next" and not end:
@@ -199,21 +229,49 @@ class AgentFromCsv:
                 "text": prompt,
                 "sender": "system"
             })
+
         prompt = "\n".join([message["text"] + "\n" for message in messages])
-        result = self.model.query(prompt)
-        messages = messages[:-1]
-        messages.append({
-            "text": "BOT: "+result,
-            "sender": "bot"
-        })
-        total_messages.append({
-            "text": "BOT: "+result,
-            "sender": "bot"
-        })
+        if not skip:
+            messages = messages[:-1]
+        else:
+            return messages, total_messages, interaction_name
 
-        print(f"Interazione corrente: {interaction_name}")
+        if not streaming:
+            result = self.model.query(prompt)
+            messages.append({
+                "text": "BOT: "+result,
+                "sender": "bot"
+            })
+            total_messages.append({
+                "text": "BOT: "+result,
+                "sender": "bot"
+            })
 
-        return messages, total_messages, interaction_name
+            print(f"Interazione corrente: {interaction_name}")
+
+            return messages, total_messages, interaction_name
+
+        acc = []
+
+        def token_gen():
+            # IMPORTANT: you need a streaming iterator from your model
+            # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
+            for chunk in self.model.call_gpt_stream(prompt):
+                # chunk should be a string token/partial
+                if not chunk:
+                    continue
+                acc.append(chunk)
+                yield chunk
+
+        def finalize():
+            result = "".join(acc)
+            bot_text = "BOT: " + result
+            messages.append({"text": bot_text, "sender": "bot"})
+            total_messages.append({"text": bot_text, "sender": "bot"})
+
+            return messages, total_messages
+
+        return token_gen(), finalize, interaction_name
 
     def apply_logic(self, current_phase, evaluation, activity, old_interaction_name=None):
         _, _, _, logic_df = self.load_df(activity)

@@ -190,6 +190,7 @@
 .chat-message {
     max-width: 70%;
     padding: 14px 18px;
+    margin: 4px 0;
     font-size: 15px;
     border-radius: 18px;
     word-break: break-word;
@@ -223,6 +224,7 @@
 .message-row{display:flex;align-items:flex-end;gap:10px}
 .message-row.row-bot{justify-content:flex-start}
 .message-row.row-user{justify-content:flex-end}
+.message-content { white-space: pre-wrap; }
 .msg-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 42px}
 
 .user-message{align-self:flex-end;background:#2f7fc4;color:#fff;border-bottom-right-radius:6px}

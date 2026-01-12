@@ -2,42 +2,464 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reciprocal Learning</title>
-    <link rel="stylesheet" href="{% static 'activity/base.css' %}">
-    <link rel="stylesheet" href="{% static 'activity/style.css' %}">
-
-    <style>
-        /* Page-specific small overrides kept here */
-        .sidebar { background-color: #ede4ff; }
-        .account-icon { width:40px;height:40px;border-radius:8px }
-        .top-bar { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px }
-        .breadcrumb { color:#9b59b6;font-size:16px }
-        .top-right-button{background-color:#6e5e8d;color:white;border:none;padding:8px 12px;border-radius:10px}
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLAIRE</title>
+  <link rel="stylesheet" href="{% static 'activity/base.css' %}">
+  <link rel="stylesheet" href="{% static 'activity/style.css' %}">
+  <link rel="stylesheet" href="{% static 'activity/chat.css' %}">
+  <!-- Add Atkinson Hyperlegible font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Lottie Web Component (will load from CDN) -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>
-<body class="phase-0">
-    <aside class="sidebar">
-        <img src="{% static 'activity/generic-avatar0.png' %}" alt="Account Icon" class="account-icon">
-        <div class="account-text">Account</div>
-        <a href="{% url 'logout' %}">
-           <button class="back-button">Logout</button>
-        </a>
 
-    </aside>
-    <div class="main-content">
-        <div class="top-bar">
-            <div class="breadcrumb">Le tue attività > Attività "Pincopallino"</div>
-            <button class="top-right-button">or we could make this?</button>
-        </div>
-        <div class="chat-container container-card">
-            <div class="message">that looks so good!</div>
-            </div>
-        <div class="input-area" style="margin-top:12px;display:flex;gap:8px;align-items:center">
-            <div class="input-field" style="flex:1;border-radius:12px;padding:10px;background:#fff;border:1px solid #eaeaea">Tt</div>
-            <button class="send-button">🎤</button>
-        </div>
+<body class="phase-{{ stage|default:0 }}">
+
+  <aside class="sidebar">
+    <img src="{% static 'activity/generic-avatar.png' %}" alt="Account Icon" class="account-icon">
+    <div class="account-text">Account</div>
+
+    <a href="{% url 'logout' %}">
+      <button class="back-button">Logout</button>
+    </a>
+  </aside>
+
+  <div class="page-content">
+
+    <div class="left">
+      <div class="textbox container-card" role="region" aria-label="Story">
+        {% if non_modifiable_output %}
+          <div class="story-text">{{ non_modifiable_output }}</div>
+        {% else %}
+          <div class="story-text"></div>
+        {% endif %}
+      </div>
+
+      <div class="story-footer">
+          <div class="progress">
+            <div id="progress-bar" class="progress-bar" style="width:0%;"></div>
+          </div>
+          <div class="page-num" id="page-num">{{ stage|default:1 }}</div>
+      </div>
+
+      <div class="download-button-wrapper">
+        <!-- INSERTED: caps toggle moved here so it appears next to the download button -->
+        <label class="caps-toggle" title="Tutto maiuscolo (Caps Lock)" style="margin-right: 10px;">
+          <input id="capsToggle" type="checkbox" aria-label="Attiva tutto maiuscolo">
+          <span class="switch" role="switch" aria-checked="false" tabindex="0"></span>
+          <span class="label">Tutto maiuscolo</span>
+        </label>
+
+        <a href="{% url 'download_total_messages' %}">
+          <button class="send-button" type="button">Download Chat (JSON)</button>
+        </a>
+      </div>
     </div>
+
+    <main class="main-content chat-page">
+      <!--<h1 class="chat-title">Conversazione</h1>-->
+
+      <div class="textbox" id="textbox">
+        {% if stage and stage|add:0 > 1 %}
+          <div class="phase-indicator" role="status" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">Fase {{ stage }}</span>
+          </div>
+        {% endif %}
+
+        <!--<div class="chat-box" id="chat-box">-->
+          {% for message in messages %}
+            <div class="message-row {% if message.sender == 'user' %}row-user{% else %}row-bot{% endif %}">
+              {% if message.sender != 'user' %}
+                <img src="{% static 'activity/avatar.png' %}" alt="Avatar" class="msg-avatar">
+              {% endif %}
+              <div class="chat-message {% if message.sender == 'user' %}user-message{% else %}bot-message{% endif %}">
+                <div class="message-content">{{ message.text }}</div>
+              </div>
+            </div>
+          {% empty %}
+            <p class="no-messages">Nessun messaggio</p>
+          {% endfor %}
+          {% if different_non_modifiable_output %}
+            <div class="message-row row-bot">
+              <img src="{% static 'activity/avatar.png' %}" alt="Avatar" class="msg-avatar msg-avatar--spacer">
+              <div class="soft-red-box">
+                <p class="soft-red-box__text">Leggi il nuovo testo sulla sinistra e rispondi</p>
+              </div>
+            </div>
+          {% endif %}
+        <!--</div>-->
+
+      </div>
+      <div style="margin-top: 10px;">
+        <!--<form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="return disableButton();">-->
+        <form class="chat-input-form" method="POST">
+          {% csrf_token %}
+            <input type="hidden" name="activity_id" value="{{ activity_id }}">
+            <input type="hidden" name="group_id" value="{{ group_id }}">
+          <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+          <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %} aria-label="Send message">
+            <!-- arrow icon -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="btn-label">Invia</span>
+          </button>
+        </form>
+      </div>
+    </main>
+
+  </div>
+
+<script>
+  // Caps toggle behavior: persists preference when toggled, but starts disabled on load.
+  (function(){
+    var STORAGE_KEY = 'ui_all_caps';
+
+    // Apply/remove inline transform on the specific elements we want to affect immediately.
+    function applyInlineCaps(on) {
+      try {
+        // story text
+        var storyEls = document.querySelectorAll('.story-text');
+        storyEls.forEach(function(el){
+          el.style.textTransform = on ? 'uppercase' : '';
+        });
+        // chat messages content (covers both bot and user messages)
+        var msgEls = document.querySelectorAll('.chat-box .message-content, .chat-box .chat-message, .chat-message .message-content .soft-red-box__text');
+        msgEls.forEach(function(el){
+          el.style.textTransform = on ? 'uppercase' : '';
+        });
+      } catch (e) { /* ignore DOM errors */ }
+    }
+
+    function setCapsOn(on) {
+      if (on) document.body.classList.add('caps-on');
+      else document.body.classList.remove('caps-on');
+      var switchEl = document.querySelector('.caps-toggle .switch');
+      if (switchEl) switchEl.setAttribute('aria-checked', on ? 'true' : 'false');
+
+      // Ensure the story and chat text become uppercase immediately and reliably.
+      applyInlineCaps(!!on);
+    }
+
+    function getStored() {
+      try {
+        return localStorage.getItem(STORAGE_KEY) === '1';
+      } catch (e) { return false; }
+    }
+
+    function initCapsToggle() {
+      var checkbox = document.getElementById('capsToggle');
+      var switchEl = document.querySelector('.caps-toggle .switch');
+
+      // CHANGED: always start not active on page load (ignore stored preference)
+      var enabled = false;
+      if (checkbox) checkbox.checked = enabled;
+      setCapsOn(enabled);
+
+      function updateState(on) {
+        try { localStorage.setItem(STORAGE_KEY, on ? '1' : '0'); } catch (e) {}
+        setCapsOn(on);
+      }
+
+      if (checkbox) {
+        checkbox.addEventListener('change', function(e){
+          updateState(!!checkbox.checked);
+        });
+      }
+
+      if (switchEl) {
+        // visible switch toggles the hidden checkbox (and supports keyboard)
+        switchEl.addEventListener('click', function(e){
+          e.preventDefault();
+          if (!checkbox) return;
+          checkbox.checked = !checkbox.checked;
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        switchEl.addEventListener('keydown', function(e){
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            switchEl.click();
+          }
+        });
+      }
+
+      // Observe dynamic updates and keep inline caps in sync
+      var observerConfig = { childList: true, subtree: true, characterData: true };
+      var chatBox = document.querySelector('.chat-box');
+      if (chatBox) {
+        var chatObs = new MutationObserver(function(){ applyInlineCaps(getStored()); });
+        chatObs.observe(chatBox, observerConfig);
+      }
+      var story = document.querySelector('.story-text');
+      if (story) {
+        var storyObs = new MutationObserver(function(){ applyInlineCaps(getStored()); });
+        storyObs.observe(story, observerConfig);
+      }
+    }
+
+    // Run immediately if DOM is ready, otherwise wait for DOMContentLoaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCapsToggle);
+    } else {
+      initCapsToggle();
+    }
+  })();
+
+  function getCSRFToken() {
+    // simplest: read from the hidden input rendered by {% csrf_token %}
+    const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    return csrfInput ? csrfInput.value : '';
+  }
+
+  function scrollChatToBottom() {
+    const box = document.getElementById('textbox');
+    if (box) box.scrollTop = box.scrollHeight;
+  }
+
+  function setBlockedUI(blocked) {
+    const form = document.querySelector(".chat-input-form");
+    const textarea = form?.querySelector('textarea[name="message"]');
+    const button = document.getElementById("chat-send-button");
+
+    if (textarea) textarea.disabled = !!blocked;
+    if (button) {
+      button.disabled = !!blocked;
+      button.setAttribute("aria-disabled", blocked ? "true" : "false");
+    }
+
+    // Optional: give user feedback
+    if (blocked && textarea) {
+      textarea.placeholder = "Attività completata.";
+    }
+  }
+
+  function setDifferentNonModifiableOutput(flag) {
+    const textbox = document.getElementById("textbox");
+    if (!textbox) return;
+
+    // Remove existing box if present
+    const existing = document.getElementById("different-nmo-box");
+    if (existing) existing.remove();
+
+    if (!flag) return;
+
+    // Create the same DOM structure your template creates
+    const row = document.createElement("div");
+    row.id = "different-nmo-box";
+    row.className = "message-row row-bot";
+
+    const img = document.createElement("img");
+    img.src = "{% static 'activity/avatar.png' %}";
+    img.alt = "Avatar";
+    img.className = "msg-avatar msg-avatar--spacer";
+    row.appendChild(img);
+
+    const box = document.createElement("div");
+    box.className = "soft-red-box";
+
+    const p = document.createElement("p");
+    p.className = "soft-red-box__text";
+    p.textContent = "Leggi il nuovo testo sulla sinistra e rispondi";
+    box.appendChild(p);
+
+    row.appendChild(box);
+    textbox.appendChild(row);
+
+    scrollChatToBottom();
+  }
+
+  function updateProgressUI(stage, numStages) {
+    const pageNum = document.getElementById("page-num");
+    if (pageNum) pageNum.textContent = stage;
+
+    const bar = document.getElementById("progress-bar");
+    if (bar && numStages) {
+      // If stage is 1..numStages
+      const pct = Math.max(0, Math.min(100, (stage / numStages) * 100));
+      bar.style.width = pct + "%";
+    }
+
+    // Optional: update the "Fase X" chip if you want it to reflect new stage
+    const indicator = document.querySelector(".phase-indicator .label");
+    if (indicator && stage > 1) {
+      indicator.textContent = `Fase ${stage}`;
+    }
+  }
+
+  function appendMessageRow({ sender, text }) {
+    // sender: "user" or "bot"
+    const textbox = document.getElementById('textbox');
+    if (!textbox) return null;
+
+    const row = document.createElement('div');
+    row.className = `message-row ${sender === 'user' ? 'row-user' : 'row-bot'}`;
+
+    if (sender !== 'user') {
+      const img = document.createElement('img');
+      img.src = "{% static 'activity/avatar.png' %}";
+      img.alt = "Avatar";
+      img.className = "msg-avatar";
+      row.appendChild(img);
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = `chat-message ${sender === 'user' ? 'user-message' : 'bot-message'}`;
+
+    const content = document.createElement('div');
+    content.className = "message-content";
+    content.textContent = text || "";
+
+    bubble.appendChild(content);
+    row.appendChild(bubble);
+    textbox.appendChild(row);
+
+    scrollChatToBottom();
+    return content; // return the element we can append streaming text into
+  }
+
+  function parseSSEBlock(block) {
+    const lines = block.split("\n");
+    let event = "message";
+    let dataLines = [];
+
+    for (const line of lines) {
+      if (line.startsWith("event:")) {
+        event = line.slice(6).trim(); // OK to trim the event name
+      } else if (line.startsWith("data:")) {
+        // IMPORTANT: do NOT trim, or you'll lose spaces between words
+        let d = line.slice(5);        // everything after "data:"
+        if (d.startsWith(" ")) d = d.slice(1); // remove only the single optional space after colon
+        dataLines.push(d);            // keep trailing spaces!
+      }
+    }
+
+    return { event, data: dataLines.join("\n") };
+  }
+
+  async function submitWithStreaming(form) {
+    const button = document.getElementById("chat-send-button");
+    const textarea = form.querySelector('textarea[name="message"]');
+    const message = (textarea?.value || "").trim();
+    if (!message) return;
+
+    // ✅ Build FormData BEFORE disabling/clearing
+    const formData = new FormData(form);
+
+    // Optimistic UI
+    setDifferentNonModifiableOutput(false);
+    appendMessageRow({sender: "user", text: message});
+    const botContentEl = appendMessageRow({sender: "bot", text: ""});
+
+    // Disable UI
+    textarea.disabled = true;
+    button.disabled = true;
+
+    // Clear input
+    textarea.value = "";
+
+    try {
+      const res = await fetch("{% url 'chat' %}", {
+        method: "POST",
+        headers: {"X-CSRFToken": getCSRFToken()},
+        body: formData,
+      });
+      if (!res.ok || !res.body) throw new Error("No stream");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let buffer = "";
+      let fullText = "";
+      let meta = null;
+
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, {stream: true});
+
+        // Process complete SSE blocks
+        let idx;
+        while ((idx = buffer.indexOf("\n\n")) !== -1) {
+          const block = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+
+          if (!block.trim()) continue;
+
+          const {event, data} = parseSSEBlock(block);
+
+          if (event === "token") {
+            // undo newline escaping
+            const chunk = data.replaceAll("\\n", "\n");
+            fullText += chunk;
+            if (botContentEl) botContentEl.textContent = fullText;
+            scrollChatToBottom();
+          }
+
+          if (event === "meta") {
+            meta = JSON.parse(data);
+            updateProgressUI(meta.stage, meta.num_stages);
+            setDifferentNonModifiableOutput(!!meta.different_non_modifiable_output);
+            wasBlocked = !!meta.blocked;
+            setBlockedUI(wasBlocked);
+
+            // Update UI with the extra info you wanted:
+            // stage indicator
+            const pageNum = document.getElementById("page-num");
+            if (pageNum) pageNum.textContent = meta.stage;
+
+            // story pane
+            const story = document.querySelector(".story-text");
+            if (story && meta.non_modifiable_output != null) {
+              story.textContent = meta.non_modifiable_output;
+            }
+
+            // blocked state
+            if (meta.blocked) {
+              textarea.disabled = true;
+              button.disabled = true;
+            }
+            // if not blocked, we will re-enable in finally below
+          }
+
+          if (event === "done") {
+            // optional: you can stop early if you want
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      if (botContentEl) botContentEl.textContent = "Errore durante lo streaming della risposta.";
+    } finally {
+      // Only re-enable if server did not block
+      if (!wasBlocked) {
+        const textarea = form.querySelector('textarea[name="message"]');
+        const button = document.getElementById("chat-send-button");
+        if (textarea) textarea.disabled = false;
+        if (button) {
+          button.disabled = false;
+          button.setAttribute("aria-disabled", "false");
+        }
+        textarea?.focus();
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector(".chat-input-form");
+    if (!form) return;
+
+    // Remove inline onsubmit behavior if you want; we’ll prevent default anyway
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      submitWithStreaming(form);
+    });
+  });
+</script>
+
 </body>
 </html>
