@@ -33,7 +33,7 @@
       <div class="textbox container-card" role="region" aria-label="Story">
           <div class="phase-indicator" role="status" aria-live="polite">
             <span class="dot" aria-hidden="true"></span>
-            <span class="label">Testo {{ current_num_text }} su {{ num_texts }}</span>
+            <span class="label" id="texts-chip">Testo {{ current_num_text }} su {{ num_texts }}</span>
           </div>
         {% if non_modifiable_output %}
           <div class="story-text">{{ non_modifiable_output }}</div>
