@@ -336,7 +336,7 @@ def get_chat(request):
                         debug_df = pd.read_excel(io.BytesIO(useractivity.criteria_excel))
                         print("DEBUG criteria_excel head:\n", debug_df.head())"""
             else:
-                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=True)
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=False)
                 if previous_interaction != -1:
                     request.session["messages"] = request.session["messages"][:-1]
                     request.session["messages"].append(request.session["total_messages"][-2])
@@ -519,7 +519,7 @@ def get_chat_stream(request):
                     useractivity.criteria_excel = excel_bytes
                     useractivity.save()
             else:
-                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=True)
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=False)
                 if previous_interaction != -1:
                     request.session["messages"] = request.session["messages"][:-1]
                     request.session["messages"].append(request.session["total_messages"][-2])
