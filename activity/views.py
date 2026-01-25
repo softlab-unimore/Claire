@@ -64,6 +64,8 @@ def logout_request(request):
 @login_required
 def create_class(request):
    error = False
+   class_name = ""
+
    if request.method == "POST":
          if request.user.userprofile.role == "2":
             form = CreateClass(request.POST)
@@ -86,6 +88,7 @@ def create_class(request):
                   group = Group.objects.create(name=class_name, share_link=share_link)
             else:
                group = Group.objects.get(share_link=share_link)
+               class_name = group.name
 
             if group == None:
                if not error:
@@ -95,7 +98,7 @@ def create_class(request):
                return redirect(index)
          else:
             form.add_error(None, "Every field must be correctly filled")
-         context = {"form": form, "role": request.user.userprofile.role}
+         context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
    elif request.method == "GET":
       if "group_id" in request.GET.keys():
          if request.user.userprofile.role == "2":
@@ -103,21 +106,24 @@ def create_class(request):
          else:
             form = JoinClass(request.GET)
 
+         group = get_object_or_404(Group, id=request.GET["group_id"])
+         class_name = group.name
+
          users = [(userprofile.user.username, "Studente" if userprofile.role == "1" else "Insegnante") for userprofile in Group.objects.get(id=request.GET["group_id"]).userprofiles.all()]
          users = sorted(users, key=lambda x: x[1] == "Insegnante", reverse=True)
-         context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "users": users}
+         context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "users": users, "group_name": class_name}
       else:
          if request.user.userprofile.role == "2":
             form = CreateClass()
          else:
             form = JoinClass()
-         context = {"form": form, "role": request.user.userprofile.role}
+         context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
    else:
       if request.user.userprofile.role == "2":
          form = CreateClass()
       else:
          form = JoinClass()
-      context = {"form": form, "role": request.user.userprofile.role}
+      context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
 
    return render(request, "activity/members.html", context)
 
@@ -138,11 +144,14 @@ def get_activity_page(request):
    if request.method != "POST":
       return redirect(index)
    group_id = request.POST.get('group_id')
+   group_name = None
    if group_id:
+      group = get_object_or_404(Group, id=group_id)
+      group_name = group.name
       activities = Activity.objects.filter(group_id=group_id)
    else:
       activities = []
-   return render(request, "activity/activity.html", {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id})
+   return render(request, "activity/activity.html", {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id, "group_name": group_name})
 
 @login_required
 def get_members(request):
@@ -200,17 +209,21 @@ def get_new_activity(request):
                 )
 
             activities = Activity.objects.filter(group_id=group_id)
+            group = get_object_or_404(Group, id=group_id)
+            group_name = group.name
             return render(request, "activity/activity.html",
-                          {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id})
+                          {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id, "group_name": group_name})
 
         context = {"form": form, "role": request.user.userprofile.role, "group_id": request.POST["group_id"]}
     else:
+        group = get_object_or_404(Group, id=request.GET["group_id"])
+        group_name = group.name
         if "activity_id" in request.GET:
            form = GetActivityForm(request.GET)
-           context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "activity_id": request.GET["activity_id"]}
+           context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "activity_id": request.GET["activity_id"], "group_name": group_name}
         else:
            form = GetActivityForm()
-           context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"]}
+           context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "group_name": group_name}
 
     return render(request, "activity/new_activity.html", context)
 
@@ -382,6 +395,7 @@ def get_chat(request):
         "non_modifiable_output": request.session["non_modifiable_output"],
         "num_stages": agent.num_stages,
         "different_non_modifiable_output": different_non_modifiable_output,
+        "num_texts": agent.num_texts,
     } | additional_context)
 
 @login_required
@@ -397,12 +411,17 @@ def get_chat_stream(request):
         activity = get_object_or_404(Activity, id=request.GET["activity_id"])
     elif request.method == "POST":
         activity = get_object_or_404(Activity, id=request.POST["activity_id"])
+    else:
+        raise HttpResponseForbidden("Invalid request method.")
+
+    group_name = activity.group_id.name if activity and activity.group_id else None
 
     if request.method == "GET":
         if "stage" not in request.session:
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
             request.session["suitability_counter"] = 0
+            request.session["current_num_text"] = 0
             request.session["criteria_data"] = []
 
         if "messages" not in request.session or len(request.session["messages"]) == 0:
@@ -426,7 +445,12 @@ def get_chat_stream(request):
         } for message in request.session["messages"] if message["sender"] != "system"]
 
         if non_modifiable_output is not None and non_modifiable_output.lower() != "nan" and non_modifiable_output != "":
+            if request.session.get("non_modifiable_output", None) != non_modifiable_output:
+                request.session["current_num_text"] += 1
             request.session["non_modifiable_output"] = non_modifiable_output
+
+        request.session["num_texts"] = agent.num_texts
+        request.session.modified = True
 
         return render(request, "activity/chat2.html", {
             "role": request.user.userprofile.role,
@@ -436,6 +460,9 @@ def get_chat_stream(request):
             "non_modifiable_output": request.session["non_modifiable_output"],
             "num_stages": agent.num_stages,
             "different_non_modifiable_output": different_non_modifiable_output,
+            "num_texts": session.get("num_texts"),
+            "current_num_text": session.get("current_num_text"),
+            "group_name": group_name,
         } | additional_context)
 
     elif request.method == "POST":
@@ -443,6 +470,7 @@ def get_chat_stream(request):
             request.session["stage"] = 1
             request.session["num_interactions"] = 1
             request.session["suitability_counter"] = 0
+            request.session["current_num_text"] = 0
             request.session["criteria_data"] = []
 
         if agent.is_activity_finished(request.session["stage"], activity):
@@ -493,9 +521,9 @@ def get_chat_stream(request):
             request.session["suitability_counter"] = 0
             next_interaction = agent.apply_logic(request.session["stage"], criteria, activity, previous_interaction)
 
-        if next_interaction == "next" or agent.are_interactions_too_many(activity, request.session["stage"], request.session["num_interactions"]):
+        if (next_interaction == "next" or agent.are_interactions_too_many(activity, request.session["stage"], request.session["num_interactions"], request.session["suitability_counter"])) and suitability:
             if agent.is_activity_finished(request.session["stage"]+1, activity):
-                token_iter, finalize, previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, streaming=True, end=True)
+                token_iter, finalize, previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, criteria=criteria, streaming=True, end=True)
 
                 criteria_data = request.session.get("criteria_data", [])
 
@@ -519,7 +547,7 @@ def get_chat_stream(request):
                     useractivity.criteria_excel = excel_bytes
                     useractivity.save()
             else:
-                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=True)
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, criteria=criteria, skip=True)
                 if previous_interaction != -1:
                     request.session["messages"] = request.session["messages"][:-1]
                     request.session["messages"].append(request.session["total_messages"][-2])
@@ -534,7 +562,7 @@ def get_chat_stream(request):
             request.session["stage"] += 1
             request.session["num_interactions"] = 1
         else:
-            token_iter, finalize, previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, streaming=True)
+            token_iter, finalize, previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, criteria=criteria, streaming=True)
             request.session["previous_interaction"] = previous_interaction
             if suitability:
                 request.session["num_interactions"] += 1
@@ -549,6 +577,9 @@ def get_chat_stream(request):
         blocked = True
     else:
         blocked = False
+
+    request.session["num_texts"] = agent.num_texts
+    request.session.modified = True
 
     """def stream():
         # Optional: yield immediately to kick off rendering in some setups
@@ -595,12 +626,14 @@ def get_chat_stream(request):
             } for m in session["messages"] if m["sender"] != "system"]
 
             if non_modifiable_output is not None and non_modifiable_output.lower() != "nan" and non_modifiable_output != "":
+                if session.get("non_modifiable_output", None) != non_modifiable_output:
+                    session["current_num_text"] += 1
                 session["non_modifiable_output"] = non_modifiable_output
             session.save()
 
             meta = {
                 "role": request.user.userprofile.role,
-                "messages": messages_to_send,  # optional; you may not need to resend this
+                "messages": messages_to_send,
                 "blocked": blocked,
                 "stage": session["stage"],
                 "non_modifiable_output": session.get("non_modifiable_output"),
@@ -608,6 +641,9 @@ def get_chat_stream(request):
                 "different_non_modifiable_output": different_non_modifiable_output,
                 "group_id": request.POST.get("group_id"),
                 "activity_id": request.POST.get("activity_id"),
+                "num_texts": session.get("num_texts"),
+                "current_num_text": session.get("current_num_text"),
+                "group_name": group_name,
             } | additional_context
 
             yield sse_event("meta", json.dumps(meta, ensure_ascii=False))

@@ -31,6 +31,10 @@
 
     <div class="left">
       <div class="textbox container-card" role="region" aria-label="Story">
+          <div class="phase-indicator" role="status" aria-live="polite">
+            <span class="dot" aria-hidden="true"></span>
+            <span class="label">Testo {{ current_num_text }} su {{ num_texts }}</span>
+          </div>
         {% if non_modifiable_output %}
           <div class="story-text">{{ non_modifiable_output }}</div>
         {% else %}
@@ -56,6 +60,7 @@
         <a href="{% url 'download_total_messages' %}">
           <button class="send-button" type="button">Download Chat (JSON)</button>
         </a>
+      <button class="send-button" type="button" id="backButton" style="margin-left: 2px;">Torna indietro</button>
       </div>
     </div>
 
@@ -63,13 +68,6 @@
       <!--<h1 class="chat-title">Conversazione</h1>-->
 
       <div class="textbox" id="textbox">
-        {% if stage and stage|add:0 > 1 %}
-          <div class="phase-indicator" role="status" aria-live="polite">
-            <span class="dot" aria-hidden="true"></span>
-            <span class="label">Fase {{ stage }}</span>
-          </div>
-        {% endif %}
-
         <!--<div class="chat-box" id="chat-box">-->
           {% for message in messages %}
             <div class="message-row {% if message.sender == 'user' %}row-user{% else %}row-bot{% endif %}">
@@ -114,6 +112,21 @@
 
   </div>
 
+  <div id="deleteModalOverlay" class="delete-modal-overlay" onclick="closeDeleteModal()">
+    <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="event.stopPropagation()">
+      <h2 id="deleteModalTitle">Sei sicuro?</h2>
+      <p>Se torni indietro senza aver finito l'attività, perderai la conversazione corrente.</p>
+
+      <!-- We keep the same structure/classes; action is handled by JS -->
+      <form id="deleteForm" onsubmit="return false;">
+        <div class="modal-actions">
+          <button type="button" class="modal-button annulla" onclick="closeDeleteModal()">Annulla</button>
+          <button type="button" id="procediButton" class="modal-button procedi" onclick="goBackToActivity()">Procedi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 <script>
   // Caps toggle behavior: persists preference when toggled, but starts disabled on load.
   (function(){
@@ -128,7 +141,7 @@
           el.style.textTransform = on ? 'uppercase' : '';
         });
         // chat messages content (covers both bot and user messages)
-        var msgEls = document.querySelectorAll('.chat-box .message-content, .chat-box .chat-message, .chat-message .message-content .soft-red-box__text');
+        var msgEls = document.querySelectorAll('.chat-box .message-content, .chat-input, .chat-box .chat-message, .chat-message .message-content .soft-red-box__text');
         msgEls.forEach(function(el){
           el.style.textTransform = on ? 'uppercase' : '';
         });
@@ -284,10 +297,10 @@
     }
 
     // Optional: update the "Fase X" chip if you want it to reflect new stage
-    const indicator = document.querySelector(".phase-indicator .label");
-    if (indicator && stage > 1) {
-      indicator.textContent = `Fase ${stage}`;
-    }
+    //const indicator = document.querySelector(".phase-indicator .label");
+    //if (indicator && stage > 1) {
+     // indicator.textContent = `Fase ${stage}`;
+    //}
   }
 
   function appendMessageRow({ sender, text }) {
@@ -407,6 +420,9 @@
             wasBlocked = !!meta.blocked;
             setBlockedUI(wasBlocked);
 
+            const chip = document.getElementById("texts-chip");
+            if (chip && meta.num_texts != null) chip.textContent = `Testo ${meta.current_num_text} su ${meta.num_texts}`;
+
             // Update UI with the extra info you wanted:
             // stage indicator
             const pageNum = document.getElementById("page-num");
@@ -449,7 +465,167 @@
     }
   }
 
+  (function () {
+    function unwrapSpan(span) {
+      const parent = span.parentNode;
+      if (!parent) return;
+      while (span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+      parent.normalize(); // merges adjacent text nodes
+    }
+
+    // Compute character offset within rootEl for (node, offset)
+    function getCharOffset(rootEl, node, offset) {
+      let count = 0;
+      const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
+
+      let cur;
+      while ((cur = walker.nextNode())) {
+        if (cur === node) return count + offset;
+        count += cur.nodeValue.length;
+      }
+      // If node isn't a text node (rare), try to approximate:
+      return count;
+    }
+
+    // Find a highlight span exactly matching [start,end]
+    function findExactHighlight(rootEl, start, end) {
+      const spans = rootEl.querySelectorAll("span.story-hl[data-start][data-end]");
+      for (const sp of spans) {
+        const s = parseInt(sp.dataset.start, 10);
+        const e = parseInt(sp.dataset.end, 10);
+        if (s === start && e === end) return sp;
+      }
+      return null;
+    }
+
+    // Remove any highlights that overlap [start,end] to avoid nesting/overlaps
+    function removeOverlappingHighlights(rootEl, start, end) {
+      const spans = Array.from(rootEl.querySelectorAll("span.story-hl[data-start][data-end]"));
+      for (const sp of spans) {
+        const s = parseInt(sp.dataset.start, 10);
+        const e = parseInt(sp.dataset.end, 10);
+        const overlaps = Math.max(s, start) < Math.min(e, end);
+        if (overlaps) unwrapSpan(sp);
+      }
+    }
+
+    function highlightRange(rootEl, range, start, end) {
+      const wrapper = document.createElement("span");
+      wrapper.className = "story-hl";
+      wrapper.dataset.start = String(start);
+      wrapper.dataset.end = String(end);
+
+      // Robust wrapping: extract + insert
+      const contents = range.extractContents();
+      wrapper.appendChild(contents);
+      range.insertNode(wrapper);
+
+      // Clear selection
+      const sel = window.getSelection();
+      sel && sel.removeAllRanges();
+    }
+
+    function handleStorySelection(storyEl) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+
+      // Ensure selection is inside .story-text
+      const common = range.commonAncestorContainer;
+      if (!storyEl.contains(common)) return;
+
+      // We only want text selection; compute offsets in plain text
+      const start = getCharOffset(storyEl, range.startContainer, range.startOffset);
+      const end = getCharOffset(storyEl, range.endContainer, range.endOffset);
+      const a = Math.min(start, end);
+      const b = Math.max(start, end);
+      if (a === b) return;
+
+      // Toggle behavior: if exact highlight exists -> remove it
+      const existing = findExactHighlight(storyEl, a, b);
+      if (existing) {
+        unwrapSpan(existing);
+        sel.removeAllRanges();
+        return;
+      }
+
+      // Otherwise, remove overlaps and add highlight
+      removeOverlappingHighlights(storyEl, a, b);
+
+      // IMPORTANT: range objects may become stale after DOM changes; re-read selection if needed
+      // Here we re-check selection and rebuild range quickly using current selection if possible.
+      // If selection got lost, just do nothing.
+      const sel2 = window.getSelection();
+      if (!sel2 || sel2.rangeCount === 0) return;
+      const freshRange = sel2.getRangeAt(0);
+      if (freshRange.collapsed) return;
+      if (!storyEl.contains(freshRange.commonAncestorContainer)) return;
+
+      highlightRange(storyEl, freshRange, a, b);
+    }
+
+    function initStoryHighlighting() {
+      const storyEl = document.querySelector(".story-text");
+      if (!storyEl) return;
+
+      // Mouse selection
+      storyEl.addEventListener("mouseup", () => handleStorySelection(storyEl));
+
+      // Touch selection (mobile)
+      storyEl.addEventListener("touchend", () => {
+        // small delay helps iOS finalize selection
+        setTimeout(() => handleStorySelection(storyEl), 0);
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initStoryHighlighting);
+    } else {
+      initStoryHighlighting();
+    }
+  })();
+
+  function openDeleteModal(event) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    var overlay = document.getElementById('deleteModalOverlay');
+    var procedi = document.getElementById('procediButton');
+
+    // Always enabled for back action
+    if (procedi) procedi.removeAttribute('disabled');
+
+    overlay.classList.add('open');
+
+    // Focus cancel for accessibility
+    var cancelBtn = document.querySelector('.modal-button.annulla');
+    if (cancelBtn) cancelBtn.focus();
+  }
+
+  // Close modal
+  function closeDeleteModal() {
+    var overlay = document.getElementById('deleteModalOverlay');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  // Proceed: go to activity page
+  function goBackToActivity() {
+    window.location.href = "{% url 'activity' %}";
+  }
+
+  // Hook the Torna indietro button
   document.addEventListener("DOMContentLoaded", function () {
+    var backBtn = document.getElementById("backButton");
+    if (backBtn) {
+      backBtn.addEventListener("click", function (e) {
+        openDeleteModal(e);
+      });
+    }
+
     const form = document.querySelector(".chat-input-form");
     if (!form) return;
 

@@ -3,6 +3,7 @@ import pandas as pd
 import io
 
 from .methods import OpenAIModel
+from .prompts.prompts_csv.not_inherent_prompt import not_inherent_prompt
 from .prompts.prompts_csv.phase import phase_prompt
 from .prompts.prompts_csv.criteria import criteria_prompt
 from .prompts.prompts_csv.interaction import interaction_prompt
@@ -22,6 +23,7 @@ class AgentFromCsv:
         self.num_stages = None
 
         #self.max_num_interactions = 3 # TODO: this will likely need to be set by the user (e.g. from csv) in the future
+        self.num_texts = None
 
     def is_activity_finished(self, current_phase, activity):
         phases_df, _, _, _ = self.load_df(activity)
@@ -29,11 +31,11 @@ class AgentFromCsv:
             return True
         return False
 
-    def are_interactions_too_many(self, activity, current_phase, num_interactions):
+    def are_interactions_too_many(self, activity, current_phase, num_interactions, suitability_counter):
         phases_df, _, _, _ = self.load_df(activity)
         max_num_interactions = phases_df[phases_df["Fase"] == current_phase]["Numero interazioni massimo"].iloc[0]
 
-        if num_interactions >= max_num_interactions:
+        if num_interactions-suitability_counter >= max_num_interactions:
             return True
         return False
 
@@ -52,6 +54,7 @@ class AgentFromCsv:
             logic = pd.read_csv(io.BytesIO(dataset.logic))
 
         self.num_stages = len(phases)
+        self.num_texts = phases["Input non modificabile"].nunique()
         return phases, criteria, interaction, logic
 
     def apply_phase(self, current_phase, messages, total_messages, activity, streaming=False):
@@ -186,12 +189,22 @@ class AgentFromCsv:
         if suitability_counter >= 3:
             suitability = True
 
-        return messages, total_messages, results[0], suitability, explanation # currently, the method works only with one criteria for each phase
+        return messages, total_messages, results[0].strip().lower(), suitability, explanation # currently, the method works only with one criteria for each phase
 
-    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, end=False, streaming=False, skip=False):
+    def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, criteria, end=False, streaming=False, skip=False):
         _, _, interaction_df, _ = self.load_df(activity)
 
-        if interaction_name == "next" and not end:
+        if criteria == "non inerente":
+            messages.append({
+                "text": not_inherent_prompt,
+                "sender": "system"
+            })
+            total_messages.append({
+                "text": not_inherent_prompt,
+                "sender": "system"
+            })
+            #return messages, total_messages, -1
+        elif interaction_name == "next" and not end:
             messages.append({
                 "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
                 "sender": "system"
@@ -200,7 +213,7 @@ class AgentFromCsv:
                 "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
                 "sender": "system"
             })
-            return messages, total_messages, -1
+            #return messages, total_messages, -1
         elif interaction_name == "next":
             messages.append({
                 "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
@@ -211,6 +224,7 @@ class AgentFromCsv:
                 "sender": "system"
             })
         else:
+            print(f"Applying interaction: {interaction_name}")
             rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
             assert len(rows_interaction) == 1
             rows_interaction = rows_interaction.iloc[0,:]
@@ -278,7 +292,7 @@ class AgentFromCsv:
 
         try:
             rows_logic = logic_df[(logic_df["Fase"] == current_phase) &
-                                        (logic_df["Criterio"] == evaluation.upper())]
+                                        (logic_df["Criterio"].str.lower() == evaluation.lower())]
 
             if old_interaction_name is not None:
                 rows_logic = rows_logic[rows_logic["Interazione Precedente"] == old_interaction_name]
@@ -288,7 +302,7 @@ class AgentFromCsv:
             print(logic_df.head())
             print(current_phase)
             rows_logic = logic_df[(logic_df["Fase"] == current_phase)]
-            rows_logic = rows_logic.iloc[0, :]
+            rows_logic = rows_logic.iloc[0, :] # this always takes the first row, which could become troublesome if the first interaction of the phase is thinking aloud
 
         if old_interaction_name is None:
             next_interaction_name = rows_logic["Interazione Precedente"]
