@@ -14,7 +14,7 @@ from .prompts.prompts_csv.system_prompt import system_prompt
 from django.http import HttpResponse
 import json
 
-import pandas as pd   # NEW
+import pandas as pd
 import io
 
 def get_login(request):
@@ -349,7 +349,7 @@ def get_chat(request):
                         debug_df = pd.read_excel(io.BytesIO(useractivity.criteria_excel))
                         print("DEBUG criteria_excel head:\n", debug_df.head())"""
             else:
-                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=True)
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, skip=False)
                 if previous_interaction != -1:
                     request.session["messages"] = request.session["messages"][:-1]
                     request.session["messages"].append(request.session["total_messages"][-2])
