@@ -22,7 +22,7 @@
     </aside>
 
     <main class="main-content">
-        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Nuova attività</h1>
+        <h1>{{ group_name }} / Nuova attività</h1>
 
         <form action="{% url 'new_activity' %}" method="POST" enctype="multipart/form-data">
            {% csrf_token %}

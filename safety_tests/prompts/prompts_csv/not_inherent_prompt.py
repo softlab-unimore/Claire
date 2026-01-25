@@ -1,0 +1,3 @@
+not_inherent_prompt = """L'utente ha fornito una risposta che è stata valutata come "non inerente" rispetto alla domanda posta.
+Ri-invita il bambino a rispondere alla domanda originale in modo gentile e incoraggiante, sottolineando l'importanza di rimanere concentrati sull'argomento della domanda.
+Non salutarlo nuovamente, e non suggerire possibili risposte, ma semplicemente chiedigli di rispondere coerentemente all'interazione precedente. Usa sempre un tono amichevole e di supporto adatto per un bambino."""

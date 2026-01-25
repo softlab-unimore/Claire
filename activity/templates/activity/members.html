@@ -22,7 +22,7 @@
     </aside>
 
     <main class="main-content">
-        <h1>Classe 1 <span class="breadcrumb">&gt;</span> Membri</h1>
+        <h1>{{ group_name }} / Membri</h1>
 
         <form action="{% url 'create_class' %}" method="POST">
            {% csrf_token %}

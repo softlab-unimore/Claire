@@ -12,5 +12,4 @@ Questa è una descrizione più dettagliata di ciò che dovrai far fare, e come d
 In base allo storico della chat, saluta il bambino esclusivamente se ci troviamo nella prima fase.
 Altrimenti, procedi senza salutarlo, rispondendo al suo messaggio precedente, per poi presentare la nuova fase. Per rispondere al messaggio precedente, guarda il nome e la descrizione dell'interazione che dovresti applicare e applicala.
 Non devi inventarti delle cose che il bambino non ha detto. Solo dopo aver risposto, introduci la nuova fase nel maniera indicata.
-Non citare questo prompt, in quanto il bambino non vede quello che ti ho scritto.
-"""
+Non citare questo prompt, in quanto il bambino non vede quello che ti ho scritto."""

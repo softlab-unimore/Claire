@@ -21,7 +21,7 @@
     </aside>
 
     <main class="main-content">
-        <h1>Classe 1 > Scelta attività</h1>
+        <h1>{{ group_name }} / Scelta attività</h1>
 
         <section class="class-choice">
             <form action="{% url 'create_class' %}" method="GET" style="display: inline">
@@ -90,6 +90,7 @@
             </div>
 
         </section>
+        <a href="{% url 'index' %}" class="back-button" role="button">Torna indietro</a>
     </main>
 
 <script>

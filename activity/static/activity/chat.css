@@ -8,6 +8,10 @@
     /*max-width: 75vw;*/
 }
 
+:root {
+    --sidebar-w: max(88px, 7vw);
+}
+
 .page-content {
   display: flex;
   height: 100vh;
@@ -15,6 +19,7 @@
   box-sizing: border-box;
   padding: 16px;
   gap: 12px;
+    margin-left: var(--sidebar-w);
 }
 
 .left {
@@ -24,11 +29,12 @@
     padding-top: 30px;
   justify-content: space-between; /* Push .textbox to top and button to bottom */
   /* use percentage so the left area stretches reliably */
-  flex: 0 0 46.5%; /*50%;*/
-  max-width: 46.5%; /*50%;*/
+  flex: 0 0 45.5%; /*50%;*/
+  max-width: 45.5%; /*50%;*/
 }
 
-.main-content { flex: 0 0 46.5%; max-width: 46.5%; }
+.main-content { flex: 0 0 53.5%; max-width: 53.5%; }
+.main-content.chat-page { margin-left: 0; }
 
 .textbox {
   padding: 16px;
@@ -41,6 +47,10 @@
   max-height: calc(100vh - 220px); /* keep it scrollable */
   height: calc(100vh - 220px);
   width: 100%;
+}
+
+.textbox.container-card {
+    height: calc(100vh - 280px) !important; /* slightly less height to accommodate other elements */
 }
 
 /* story text improvements */
@@ -74,6 +84,24 @@
 
 .msg-avatar--spacer {
   visibility: hidden;
+}
+
+/* Story card layout: chip on top, text right below */
+.textbox.container-card{
+  display: flex;
+  flex-direction: column;
+}
+
+/* The chip shouldn't stretch/push */
+.textbox.container-card .story-chip{
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+}
+
+/* Story text takes the remaining space and starts right under the chip */
+.textbox.container-card .story-text{
+  flex: 1 1 auto;
+  margin-top: 0;
 }
 
 .soft-red-box {
@@ -180,6 +208,12 @@
 .send-button svg{margin-right:8px}
 .send-button .btn-label{font-weight:700}
 
+.story-hl {
+  background: rgba(255, 230, 120, 0.9);
+  border-radius: 4px;
+  padding: 0 2px;
+}
+
 /* Also make other buttons rectangular (override if defined elsewhere) */
 /*.back-button{border-radius:10px;padding:10px 12px;border:none;background:#f1f6fb;color:#2b5b7a;cursor:pointer}*/
 
@@ -244,6 +278,32 @@
 /* --- Kid-friendly book animation styles --- */
 .phase-animation{display:flex;align-items:center;justify-content:center;padding:6px; position: relative}
 .phase-animation svg{width:100%;max-width:320px;height:auto}
+
+.phase-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f26b6b; /* same as .soft-red-box */
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    max-width: fit-content;
+}
+
+.phase-indicator .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: inline-block;
+}
+
+.phase-indicator .label {
+  color: inherit; /* ensures label uses the white text */
+  font-size: 13px;
+}
 
 .book { transform-origin: 50% 60%; }
 .book .cover { transition: transform 0.6s ease; }
