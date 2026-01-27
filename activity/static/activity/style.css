@@ -168,12 +168,39 @@ h1 {
     display: flex;
     align-items: center;
     transition: background 0.2s;
+    gap: 16px;
 }
 
 .list-item:hover {
     background-color: #f1ebff;
-    cursor: pointer;
+    cursor: default;
 }
+
+.list-item-left{
+  flex:1;
+}
+
+.list-item-right{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+}
+
+.btn-student-chat{
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:8px;
+  background:#6f3ff5;
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.btn-student-chat:hover{
+  filter:brightness(0.95);
+}
+
 
 .delete-bin {
   position: absolute;

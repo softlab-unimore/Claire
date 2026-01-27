@@ -30,9 +30,24 @@
 
            {% if users %}
            <div class="list">
-           {% for username in users %}
+           <!--{% for username in users %}
             <div class="list-item">{{ username.0 }}, {{ username.1 }}</div>
-           {% endfor %}
+           {% endfor %}-->
+               {% for username in users %}
+                  <div class="list-item">
+                    <div class="list-item-left">
+                      {{ username.1 }}, {{ username.2 }}
+                    </div>
+
+                    {% if role == "2" and username.2 != "Insegnante" or role == "1" and username.1 == requester_username %}
+                      <div class="list-item-right">
+                        <a href="{% url 'student_chat' username.0 group_id %}" class="btn-student-chat">
+                          Visualizza chat studente
+                        </a>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
            </div>
            {% endif %}
 

@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseForbidden, StreamingHttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.utils.text import slugify
 from .forms import LoginForm, RegistrationForm, CreateClass, JoinClass, GetActivityForm, PostActivityForm
 from .models import Group, Activity, Dataset, UserActivity
 from .methods import openaimodel
@@ -16,6 +17,7 @@ import json
 
 import pandas as pd
 import io
+import zipfile
 
 def get_login(request):
    if request.method == "POST":
@@ -98,7 +100,7 @@ def create_class(request):
                return redirect(index)
          else:
             form.add_error(None, "Every field must be correctly filled")
-         context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
+         context = {"form": form, "role": request.user.userprofile.role, "requester_username": request.user.username, "group_name": class_name}
    elif request.method == "GET":
       if "group_id" in request.GET.keys():
          if request.user.userprofile.role == "2":
@@ -109,21 +111,21 @@ def create_class(request):
          group = get_object_or_404(Group, id=request.GET["group_id"])
          class_name = group.name
 
-         users = [(userprofile.user.username, "Studente" if userprofile.role == "1" else "Insegnante") for userprofile in Group.objects.get(id=request.GET["group_id"]).userprofiles.all()]
-         users = sorted(users, key=lambda x: x[1] == "Insegnante", reverse=True)
-         context = {"form": form, "role": request.user.userprofile.role, "group_id": request.GET["group_id"], "users": users, "group_name": class_name}
+         users = [(userprofile.user.pk, userprofile.user.username, "Studente" if userprofile.role == "1" else "Insegnante") for userprofile in Group.objects.get(id=request.GET["group_id"]).userprofiles.all()]
+         users = sorted(users, key=lambda x: x[2] == "Insegnante", reverse=True)
+         context = {"form": form, "role": request.user.userprofile.role, "requester_username": request.user.username, "group_id": request.GET["group_id"], "users": users, "group_name": class_name}
       else:
          if request.user.userprofile.role == "2":
             form = CreateClass()
          else:
             form = JoinClass()
-         context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
+         context = {"form": form, "role": request.user.userprofile.role, "requester_username": request.user.username, "group_name": class_name}
    else:
       if request.user.userprofile.role == "2":
          form = CreateClass()
       else:
          form = JoinClass()
-      context = {"form": form, "role": request.user.userprofile.role, "group_name": class_name}
+      context = {"form": form, "role": request.user.userprofile.role, "requester_username": request.user.username, "group_name": class_name}
 
    return render(request, "activity/members.html", context)
 
@@ -691,3 +693,77 @@ def delete_activity(request):
     activities = Activity.objects.filter(group_id=group_id)
     return render(request, "activity/activity.html",
                   {"role": request.user.userprofile.role, "activities": activities, "group_id": group_id})
+
+
+@login_required
+def get_student_chat(request, user_id, group_id):
+    group = get_object_or_404(Group, pk=group_id)
+    target_user = get_object_or_404(User, pk=user_id)
+
+    requester_profile = request.user.userprofile
+
+    if not group.userprofiles.filter(pk=requester_profile.pk).exists():
+        return HttpResponseForbidden("You are not allowed to access this page.")
+
+    # Authorization:
+    # - teachers in the group can download anyone's
+    # - students can only download their own
+    if requester_profile.role != "2" and request.user.id != target_user.id:
+        return HttpResponseForbidden("You are not allowed to access this page.")
+
+    activities = Activity.objects.filter(group_id=group)
+
+    user_activities = (
+        UserActivity.objects
+        .select_related("activity_id")
+        .filter(user_id=target_user, activity_id__in=activities)
+    )
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        added_any = False
+
+        for ua in user_activities:
+            if not ua.criteria_excel:
+                continue
+
+            activity = ua.activity_id
+            safe_name = slugify(f"{target_user.username}_{activity.name}") #or f"activity_{activity.id}"
+            filename = f"{safe_name}_criteria.xlsx"
+
+            df = pd.read_excel(io.BytesIO(ua.criteria_excel))
+            chat_per_row = []
+            for i, row in df.iterrows():
+                chat_text = ""
+                messages = eval(row["messages"])
+                for message in messages:
+                    if message["sender"] == "system":
+                        chat_text += f"---\n\n{message['sender'].upper()}: {message['text']}\n\n"
+                    else:
+                        chat_text += f"---\n\n{message["text"]}\n\n"
+                chat_text += "---"
+                chat_per_row.append(chat_text)
+            df["messages"] = chat_per_row
+
+            out = io.BytesIO()
+            with pd.ExcelWriter(out, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False)
+            new_excel_bytes = out.getvalue()
+
+            zf.writestr(filename, new_excel_bytes)
+            added_any = True
+
+        if not added_any:
+            zf.writestr(
+                "README.txt",
+                "No activity files were found for this user in this class."
+            )
+
+    buf.seek(0)
+
+    zip_filename = f"excels_{group.name}_{target_user.username}.zip"
+    response = HttpResponse(buf.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="{zip_filename}"'
+    return response
+
+
