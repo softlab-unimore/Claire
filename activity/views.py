@@ -18,6 +18,7 @@ import json
 import pandas as pd
 import io
 import zipfile
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 def get_login(request):
    if request.method == "POST":
@@ -744,6 +745,11 @@ def get_student_chat(request, user_id, group_id):
                 chat_text += "---"
                 chat_per_row.append(chat_text)
             df["messages"] = chat_per_row
+
+            # df sanitization to avoid illegal characters in Excel
+            obj_cols = df.select_dtypes(include=["object"]).columns
+            for c in obj_cols:
+                df[c] = df[c].astype(str).map(lambda s: ILLEGAL_CHARACTERS_RE.sub("", s))
 
             out = io.BytesIO()
             with pd.ExcelWriter(out, engine="openpyxl") as writer:
