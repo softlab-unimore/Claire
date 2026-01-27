@@ -247,8 +247,8 @@ class AgentFromCsv:
         prompt = "\n".join([message["text"] + "\n" for message in messages])
         if not skip:
             messages = messages[:-1]
-        else:
-            return messages, total_messages, interaction_name
+        #else:
+        #    return messages, total_messages, interaction_name
 
         if not streaming:
             result = self.model.query(prompt)
