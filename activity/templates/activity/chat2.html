@@ -510,7 +510,7 @@
       }
     }
 
-    function highlightRange(rootEl, range, start, end) {
+    /*function highlightRange(rootEl, range, start, end) {
       const wrapper = document.createElement("span");
       wrapper.className = "story-hl";
       wrapper.dataset.start = String(start);
@@ -524,6 +524,26 @@
       // Clear selection
       const sel = window.getSelection();
       sel && sel.removeAllRanges();
+    }*/
+
+    function highlightRange(rootEl, range, start, end) {
+      const wrapper = document.createElement("span");
+      wrapper.className = "story-hl";
+      wrapper.dataset.start = String(start);
+      wrapper.dataset.end = String(end);
+
+      // Wrap selection
+      const contents = range.extractContents();
+      wrapper.appendChild(contents);
+      range.insertNode(wrapper);
+
+      const sel = window.getSelection();
+      if (sel) {
+        const r = document.createRange();
+        r.selectNodeContents(wrapper);
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
     }
 
     function handleStorySelection(storyEl) {
@@ -548,7 +568,7 @@
       const existing = findExactHighlight(storyEl, a, b);
       if (existing) {
         unwrapSpan(existing);
-        sel.removeAllRanges();
+        //sel.removeAllRanges();
         return;
       }
 
