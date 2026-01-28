@@ -303,7 +303,7 @@ if __name__ == "__main__":
     with open("prompts.pkl", "rb") as f:
         prompts = pickle.load(f)
 
-    prompts = prompts[:150]
+    prompts = prompts[:300]
     gt = GoogleTranslator(source="en", target="it")
     translation_errors = 0
     for k, prompt in tqdm(enumerate(prompts), desc="Iterating over prompts..."):
@@ -350,19 +350,10 @@ if __name__ == "__main__":
             if next_prompt:
                 break
 
-        """for msg in total_messages:
-            print(msg["text"])
-            print()
-            print("*********************************************")
-            print()
-        print(a)"""
-        final_data.append([messages, total_messages, "jailbreak"]) #"jailbreak" if k < 200 else "regular"])
+        final_data.append([messages, total_messages, "jailbreak" if k < 150 else "regular"])
         if k % 50 == 0:
-            pd.DataFrame(final_data, columns=["messages", "total_messages", "prompt_type"]).to_csv("safety_results_jailbreak.csv", index=False)
+            pd.DataFrame(final_data, columns=["messages", "total_messages", "prompt_type"]).to_csv("safety_results.csv", index=False)
 
-    pd.DataFrame(final_data, columns=["messages", "total_messages", "prompt_type"]).to_csv("safety_results_jailbreak.csv", index=False)
+    pd.DataFrame(final_data, columns=["messages", "total_messages", "prompt_type"]).to_csv("safety_results.csv", index=False)
     print("Translation errors:", translation_errors)
     print("Finish!")
-    """print("Final messages:")
-    for message in messages:
-        print(f"{message['sender']}: {message['text']}")"""
