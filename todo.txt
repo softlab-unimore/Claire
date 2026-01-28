@@ -1,8 +1,0 @@
-parti schermo sinista/destra (parte non modificabile) v
-attaccare l'interazione (e.g. pensiero ad alta voce) alla risposta fornita per l'inizio della fase successiva v
-il pezzo di testo deve essere sempre visibile se, nelle fasi successive, l'input non modificabile è vuoto. v
-nelle fasi di "richiedere nuove domande" (e.g. fase 3), a prescindere, indica di continuare con un'altra domanda -> anche il rispecchiamento ha lo stimolo finale. Soluzione finale: 2 volte rispecchiamento + stimolo, per poi fare pensiero ad alta voce v
-Bloccare le sbrodolate di chatgpt in cui incoraggia e motiva troppo il bambino
-se la risposta è completamente non inerente, ripeti la domanda senza passare alla fase successiva v
-togli il ciao! ad ogni risposta fornita dal modello v
-controlla che, a fine attività, le attività vengano salvate
