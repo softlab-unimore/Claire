@@ -14,6 +14,8 @@ from .prompts.prompts_csv.system_prompt import system_prompt
 
 from django.http import HttpResponse
 import json
+import ast
+import re
 
 import pandas as pd
 import io
@@ -512,7 +514,15 @@ def get_chat_stream(request):
             suitability_counter=request.session["suitability_counter"]
         )
 
-        request.session["criteria_data"].append([request.session["messages"], explanation, criteria, suitability])
+        message_for_criteria = ""
+        for msg in request.session["messages"]:
+            if msg["sender"] == "system":
+                message_for_criteria += f"---\n\n{msg['sender'].upper()}: {msg['text']}\n\n"
+            else:
+                message_for_criteria += f"---\n\n{msg["text"]}\n\n"
+        message_for_criteria += "---"
+        message_for_criteria = ILLEGAL_CHARACTERS_RE.sub("", message_for_criteria)
+        request.session["criteria_data"].append([message_for_criteria, explanation, criteria, suitability, request.POST["writing_time_seconds"]])
 
         if not suitability:
             request.session["suitability_counter"] += 1
@@ -533,7 +543,7 @@ def get_chat_stream(request):
                 if criteria_data:
                     df = pd.DataFrame(
                         criteria_data,
-                        columns=["messages", "explanation", "criteria", "suitability"]
+                        columns=["messages", "explanation", "criteria", "suitability", "time_to_respond_in_seconds"]
                     )
 
                     output = io.BytesIO()
@@ -698,6 +708,13 @@ def delete_activity(request):
 
 @login_required
 def get_student_chat(request, user_id, group_id):
+    def strip_problem_chars(s: str) -> str:
+        # 1) remove control chars (except \t \n \r)
+        s = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", s)
+        # 2) remove non-BMP / emoji-ish chars (very broad)
+        s = re.sub(r"[\U00010000-\U0010FFFF]", "", s)
+        return s
+
     group = get_object_or_404(Group, pk=group_id)
     target_user = get_object_or_404(User, pk=user_id)
 
@@ -735,15 +752,17 @@ def get_student_chat(request, user_id, group_id):
             df = pd.read_excel(io.BytesIO(ua.criteria_excel))
             chat_per_row = []
             for i, row in df.iterrows():
-                chat_text = ""
-                messages = eval(row["messages"])
-                for message in messages:
-                    if message["sender"] == "system":
-                        chat_text += f"---\n\n{message['sender'].upper()}: {message['text']}\n\n"
-                    else:
-                        chat_text += f"---\n\n{message["text"]}\n\n"
-                chat_text += "---"
-                chat_per_row.append(chat_text)
+                #chat_text = ""
+                #print(row["messages"])
+                #print(type(row["messages"]))
+                #messages = ast.literal_eval(strip_problem_chars(row["messages"]))
+                #for message in messages:
+                #    if message["sender"] == "system":
+                #        chat_text += f"---\n\n{message['sender'].upper()}: {message['text']}\n\n"
+                #    else:
+                #        chat_text += f"---\n\n{message['text']}\n\n"
+                #chat_text += "---"
+                chat_per_row.append(row["messages"]) #chat_text)
             df["messages"] = chat_per_row
 
             # df sanitization to avoid illegal characters in Excel

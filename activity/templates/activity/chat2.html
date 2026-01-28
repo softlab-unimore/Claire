@@ -233,6 +233,32 @@
     if (box) box.scrollTop = box.scrollHeight;
   }
 
+  let pendingWriteStartAtMs = null; // armed start time (ms)
+
+  function armWriteTimerFromNow() {
+    pendingWriteStartAtMs = Date.now();
+  }
+
+  function computeWritingTimeSeconds() {
+    if (pendingWriteStartAtMs == null) return null;
+    const ms = Date.now() - pendingWriteStartAtMs;
+    return ms / 1000; // seconds (float)
+  }
+
+  function demonstrateAndAttachWritingTimeSeconds(form, writingTimeSeconds) {
+    // (optional) log
+    console.log("writingTimeSeconds:", writingTimeSeconds);
+
+    let hidden = form.querySelector('input[name="writing_time_seconds"]');
+    if (!hidden) {
+      hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "writing_time_seconds";
+      form.appendChild(hidden);
+    }
+    hidden.value = String(writingTimeSeconds); // seconds
+  }
+
   function setBlockedUI(blocked) {
     const form = document.querySelector(".chat-input-form");
     const textarea = form?.querySelector('textarea[name="message"]');
@@ -359,7 +385,13 @@
     const message = (textarea?.value || "").trim();
     if (!message) return;
 
-    // ✅ Build FormData BEFORE disabling/clearing
+    const writingTimeSeconds = computeWritingTimeSeconds();
+    if (writingTimeSeconds != null) {
+      demonstrateAndAttachWritingTimeSeconds(form, writingTimeSeconds);
+    }
+
+    pendingWriteStartAtMs = null;
+
     const formData = new FormData(form);
 
     // Optimistic UI
@@ -447,6 +479,7 @@
           }
         }
       }
+      armWriteTimerFromNow();
     } catch (e) {
       console.error(e);
       if (botContentEl) botContentEl.textContent = "Errore durante lo streaming della risposta.";
@@ -654,6 +687,9 @@
       e.preventDefault();
       submitWithStreaming(form);
     });
+    if (pendingWriteStartAtMs == null) {
+      armWriteTimerFromNow();
+    }
   });
 </script>
 
