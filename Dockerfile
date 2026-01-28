@@ -27,4 +27,4 @@ RUN python manage.py collectstatic --noinput
 EXPOSE 8003
 
 # Default command
-CMD ["gunicorn", "DESU.wsgi:application", "--bind", "0.0.0.0:8003", "--timeout", "60"]
+CMD ["gunicorn", "Claire.wsgi:application", "--bind", "0.0.0.0:8003", "--timeout", "60"]
