@@ -179,7 +179,7 @@ class AgentFromCsv:
             messages = messages[:-1]
             print(f"Livello del criterio: {result}")
             if result.strip().lower() == "non inerente":
-                suitability = False
+                suitability = True #TODO: change to False
                 break
 
         """messages.append({
@@ -194,7 +194,8 @@ class AgentFromCsv:
     def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, criteria, end=False, streaming=False, skip=False):
         _, _, interaction_df, _ = self.load_df(activity)
 
-        if criteria == "non inerente":
+        # TODO: re-add this for non inerente to work
+        """if criteria == "non inerente":
             messages.append({
                 "text": not_inherent_prompt,
                 "sender": "system"
@@ -204,7 +205,8 @@ class AgentFromCsv:
                 "sender": "system"
             })
             #return messages, total_messages, -1
-        elif interaction_name == "next" and not end:
+        elif interaction_name == "next" and not end:"""
+        if interaction_name == "next" and not end:
             messages.append({
                 "text": "Devo rispondere che ho compreso ciò che ha detto, per poi procedere con l'interazione successiva.",
                 "sender": "system"
