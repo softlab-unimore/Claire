@@ -189,7 +189,11 @@ class AgentFromCsv:
         if suitability_counter >= 3:
             suitability = True
 
-        return messages, total_messages, results[0].strip().lower(), suitability, explanation # currently, the method works only with one criteria for each phase
+        criteria = results[0].strip().lower()
+        if criteria == "non inerente":
+            criteria = "L1" #TODO: change it to re add non inerente
+
+        return messages, total_messages, criteria, suitability, explanation # currently, the method works only with one criteria for each phase
 
     def apply_interaction(self, current_phase, messages, total_messages, interaction_name, activity, criteria, end=False, streaming=False, skip=False):
         _, _, interaction_df, _ = self.load_df(activity)
