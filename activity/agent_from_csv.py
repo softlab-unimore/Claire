@@ -77,7 +77,8 @@ class AgentFromCsv:
             "text": prompt,
             "sender": "system"
         })
-        prompt = "\n".join([message["text"]+"\n" for message in messages])
+        #prompt = "\n".join([message["text"]+"\n" for message in messages])
+        tmp_messages = deepcopy(messages)
         messages = messages[:-1]
         if messages[-1]["sender"] == "system":
             messages = messages[:-1]
@@ -88,7 +89,7 @@ class AgentFromCsv:
             non_modifiable_output = None
 
         if not streaming:
-            result = self.model.query(prompt)
+            result = self.model.query(tmp_messages) #prompt)
 
             messages.append({
                 "text": "BOT: "+result,
@@ -116,7 +117,7 @@ class AgentFromCsv:
         def token_gen():
             # IMPORTANT: you need a streaming iterator from your model
             # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
-            for chunk in self.model.call_gpt_stream(prompt):
+            for chunk in self.model.call_gpt_stream(tmp_messages): #prompt):
                 # chunk should be a string token/partial
                 if not chunk:
                     continue
@@ -125,7 +126,7 @@ class AgentFromCsv:
 
         def finalize(non_modifiable_output=non_modifiable_output):
             result = "".join(acc)
-            bot_text = "BOT: " + result
+            bot_text = result #"BOT: " + result
             messages.append({"text": bot_text, "sender": "bot"})
             total_messages.append({"text": bot_text, "sender": "bot"})
 
@@ -142,6 +143,7 @@ class AgentFromCsv:
         suitability = True
         rows_criteria = criteria_df[criteria_df["Fase"] == current_phase]
         results = []
+        explanation = None
         for i, row in rows_criteria.iterrows():
             l_descriptions = ""
             for col_number in range(0, (len(criteria_df.columns)-2)//2):
@@ -165,19 +167,16 @@ class AgentFromCsv:
                 "sender": "system"
             })
 
-            prompt = "\n".join([message["text"]+"\n" for message in messages])
-            print(prompt)
-            result = self.model.query(prompt)
+            #prompt = "\n".join([message["text"]+"\n" for message in messages])
+            result = self.model.query(messages) #prompt)
             total_messages.append({
                 "text": result,
                 "sender": "system"
             })
-            print(result)
             explanation = result
             result = self.model.extract_result(result, "risposta finale:")
             results.append(result)
             messages = messages[:-1]
-            print(f"Livello del criterio: {result}")
             if result.strip().lower() == "non inerente":
                 suitability = True #TODO: change to False
                 break
@@ -186,6 +185,10 @@ class AgentFromCsv:
             "text": results[0],
             "sender": "bot"
         })"""
+
+        if explanation is None:
+            raise ValueError(f"No criteria specified for this activity")
+
         if suitability_counter >= 3:
             suitability = True
 
@@ -230,7 +233,6 @@ class AgentFromCsv:
                 "sender": "system"
             })
         else:
-            print(f"Applying interaction: {interaction_name}")
             rows_interaction = interaction_df[(interaction_df["Fase"] == current_phase) & (interaction_df["Nome"] == interaction_name)][:1] # this case needs to be dealt on loading of the .csv files
             assert len(rows_interaction) == 1
             rows_interaction = rows_interaction.iloc[0,:]
@@ -250,14 +252,15 @@ class AgentFromCsv:
                 "sender": "system"
             })
 
-        prompt = "\n".join([message["text"] + "\n" for message in messages])
+        #prompt = "\n".join([message["text"] + "\n" for message in messages])
+        tmp_messages = deepcopy(messages)
         if not skip:
             messages = messages[:-1]
         #else:
         #    return messages, total_messages, interaction_name
 
         if not streaming:
-            result = self.model.query(prompt)
+            result = self.model.query(tmp_messages) #prompt)
             messages.append({
                 "text": "BOT: "+result,
                 "sender": "bot"
@@ -267,8 +270,6 @@ class AgentFromCsv:
                 "sender": "bot"
             })
 
-            print(f"Interazione corrente: {interaction_name}")
-
             return messages, total_messages, interaction_name
 
         acc = []
@@ -276,7 +277,7 @@ class AgentFromCsv:
         def token_gen():
             # IMPORTANT: you need a streaming iterator from your model
             # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
-            for chunk in self.model.call_gpt_stream(prompt):
+            for chunk in self.model.call_gpt_stream(tmp_messages): #prompt):
                 # chunk should be a string token/partial
                 if not chunk:
                     continue
@@ -285,7 +286,7 @@ class AgentFromCsv:
 
         def finalize():
             result = "".join(acc)
-            bot_text = "BOT: " + result
+            bot_text = result #"BOT: " + result
             messages.append({"text": bot_text, "sender": "bot"})
             total_messages.append({"text": bot_text, "sender": "bot"})
 
@@ -305,8 +306,6 @@ class AgentFromCsv:
 
             rows_logic = rows_logic.iloc[0, :]
         except:
-            print(logic_df.head())
-            print(current_phase)
             rows_logic = logic_df[(logic_df["Fase"] == current_phase)]
             rows_logic = rows_logic.iloc[0, :] # this always takes the first row, which could become troublesome if the first interaction of the phase is thinking aloud
 

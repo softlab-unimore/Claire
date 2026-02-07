@@ -29,11 +29,11 @@
     padding-top: 30px;
   justify-content: space-between; /* Push .textbox to top and button to bottom */
   /* use percentage so the left area stretches reliably */
-  flex: 0 0 45.5%; /*50%;*/
-  max-width: 45.5%; /*50%;*/
+  flex: 0 0 58.5%; /*50%;*/
+  max-width: 58.5%; /*50%;*/
 }
 
-.main-content { flex: 0 0 53.5%; max-width: 53.5%; }
+.main-content { flex: 0 0 40.5%; max-width: 40.5%; }
 .main-content.chat-page { margin-left: 0; }
 
 .textbox {
