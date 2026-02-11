@@ -400,3 +400,30 @@
   .left { width: 100%; flex-basis: auto }
   .chat-box, .chat-input-form { max-width: 100%; flex-basis: auto }
 }
+
+/* NEW: wrap textarea + counter */
+.chat-input-wrap{
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+/* NEW: little counter chip */
+.word-counter{
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(31, 45, 61, 0.06);
+  color: rgba(31, 45, 61, 0.72);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ensure textarea has room so text doesn't collide with the chip */
+.chat-input{
+  padding-right: 90px; /* space for the counter */
+}
