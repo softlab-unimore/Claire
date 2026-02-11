@@ -29,11 +29,11 @@
     padding-top: 30px;
   justify-content: space-between; /* Push .textbox to top and button to bottom */
   /* use percentage so the left area stretches reliably */
-  flex: 0 0 45.5%; /*50%;*/
-  max-width: 45.5%; /*50%;*/
+  flex: 0 0 58.5%; /*50%;*/
+  max-width: 58.5%; /*50%;*/
 }
 
-.main-content { flex: 0 0 53.5%; max-width: 53.5%; }
+.main-content { flex: 0 0 40.5%; max-width: 40.5%; }
 .main-content.chat-page { margin-left: 0; }
 
 .textbox {
@@ -55,12 +55,16 @@
 
 /* story text improvements */
 .textbox.container-card .story-text {
-  font-size: 18px;
+  font-size: 22px;
   line-height: 1.6;
   color: #1f2d3d;
   white-space: pre-wrap;
   /* Use Atkinson Hyperlegible for story text with sensible fallbacks */
   font-family: "Atkinson Hyperlegible"; /*, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif*/
+}
+
+#texts-chip {
+    font-size: 18px;
 }
 
 .story-footer { display:flex; align-items:center; gap:10px; margin-top:12px }
@@ -115,7 +119,7 @@
     align-items: center;
     justify-content: center;
     font-family: "Atkinson Hyperlegible";
-    font-size: 15px;
+    font-size: 18px;
     word-break: break-word;
     /*font-weight: 600;*/
     line-height: 1.4;
@@ -201,10 +205,10 @@
 }
 
 /* Input styled rectangular */
-.chat-input{flex:1;border-radius:10px;padding:12px 14px;height:48px;border:1px solid #e6e6e8;background:#fff; font-family: "Atkinson Hyperlegible";}
+.chat-input{flex:1;font-size:18px;resize: none;border-radius:10px;padding:12px 14px;height:48px;border:1px solid #e6e6e8;background:#fff; font-family: "Atkinson Hyperlegible";}
 
 /* Rectangular send button with label */
-.send-button{height:48px;border-radius:10px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent, #8e6bff),var(--accent-2, #5fb3ff));color:#fff;border:none;box-shadow:0 6px 18px rgba(157,110,255,0.18);cursor:pointer}
+.send-button{height:48px;border-radius:10px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent, #8e6bff),var(--accent-2, #5fb3ff));color:#fff;border:none;box-shadow:0 6px 18px rgba(157,110,255,0.18);cursor:pointer;font-size:18px;}
 .send-button svg{margin-right:8px}
 .send-button .btn-label{font-weight:700}
 
@@ -225,7 +229,7 @@
     max-width: 70%;
     padding: 14px 18px;
     margin: 4px 0;
-    font-size: 15px;
+    font-size: 20px;
     border-radius: 18px;
     word-break: break-word;
     line-height: 1.4;
@@ -395,4 +399,31 @@
 @media (max-width: 900px) {
   .left { width: 100%; flex-basis: auto }
   .chat-box, .chat-input-form { max-width: 100%; flex-basis: auto }
+}
+
+/* NEW: wrap textarea + counter */
+.chat-input-wrap{
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+/* NEW: little counter chip */
+.word-counter{
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(31, 45, 61, 0.06);
+  color: rgba(31, 45, 61, 0.72);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ensure textarea has room so text doesn't collide with the chip */
+.chat-input{
+  padding-right: 90px; /* space for the counter */
 }

@@ -57,9 +57,9 @@
           <span class="label">Tutto maiuscolo</span>
         </label>
 
-        <a href="{% url 'download_total_messages' %}">
+        <!--<a href="{% url 'download_total_messages' %}">
           <button class="send-button" type="button">Download Chat (JSON)</button>
-        </a>
+        </a>-->
       <button class="send-button" type="button" id="backButton" style="margin-left: 2px;">Torna indietro</button>
       </div>
     </div>
@@ -94,11 +94,31 @@
       </div>
       <div style="margin-top: 10px;">
         <!--<form class="chat-input-form" action="{% url 'chat' %}" method="POST" onsubmit="return disableButton();">-->
-        <form class="chat-input-form" method="POST">
+        <!--<form class="chat-input-form" method="POST">
           {% csrf_token %}
             <input type="hidden" name="activity_id" value="{{ activity_id }}">
             <input type="hidden" name="group_id" value="{{ group_id }}">
           <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+          <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %} aria-label="Send message">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="btn-label">Invia</span>
+          </button>
+        </form>-->
+      <form class="chat-input-form" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="activity_id" value="{{ activity_id }}">
+          <input type="hidden" name="group_id" value="{{ group_id }}">
+
+          <!-- NEW: textarea wrapper so we can place the counter neatly -->
+          <div class="chat-input-wrap">
+            <textarea name="message" class="chat-input" placeholder="Scrivi un messaggio..." {% if blocked %}disabled{% endif %} required></textarea>
+
+            <!-- NEW: live word counter -->
+            <div id="word-counter" class="word-counter" aria-live="polite">0 parole</div>
+          </div>
+
           <button type="submit" class="send-button" id="chat-send-button" {% if blocked %}disabled{% endif %} aria-label="Send message">
             <!-- arrow icon -->
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -691,6 +711,49 @@
       armWriteTimerFromNow();
     }
   });
+
+  (function () {
+    function countWords(text) {
+      // counts words separated by whitespace, ignores extra spaces/newlines
+      const trimmed = (text || "").trim();
+      if (!trimmed) return 0;
+      return trimmed.split(/\s+/).filter(Boolean).length;
+    }
+
+    function updateWordCounter(textarea, counterEl) {
+      const n = countWords(textarea.value);
+      counterEl.textContent = n === 1 ? "1 parola" : `${n} parole`;
+    }
+
+    function initWordCounter() {
+      const form = document.querySelector(".chat-input-form");
+      if (!form) return;
+
+      const textarea = form.querySelector('textarea[name="message"]');
+      const counterEl = document.getElementById("word-counter");
+      if (!textarea || !counterEl) return;
+
+      // Update on every input (typing, paste, etc.)
+      const onInput = () => updateWordCounter(textarea, counterEl);
+      textarea.addEventListener("input", onInput);
+
+      // Initialize with current value (in case of autofill/back nav)
+      onInput();
+
+      // Reset after submit clears textarea in submitWithStreaming()
+      // We'll hook the form submit event too (you already preventDefault + submitWithStreaming)
+      form.addEventListener("submit", function () {
+        // after your code clears textarea.value = "" this will refresh
+        setTimeout(onInput, 0);
+      });
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initWordCounter);
+    } else {
+      initWordCounter();
+    }
+  })();
 </script>
 
 </body>

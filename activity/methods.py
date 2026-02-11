@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from pydantic import BaseModel, Field
 from typing import Optional, Any, Union, List
 from dotenv import load_dotenv
@@ -15,7 +17,7 @@ class OpenAIModel(BaseModel):
     max_retries: int = Field(50, strict=True, description="Number of retries in case of failed OpenAI API call")
 
     # @timeout_decorator.timeout(60, timeout_exception=StopIteration)
-    def call_gpt(self, prompt: str) -> (str, dict):
+    """def call_gpt(self, prompt: str) -> (str, dict):
         completion = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
@@ -24,6 +26,21 @@ class OpenAIModel(BaseModel):
                         "content": f"{prompt}"
                     }
                 ],
+                temperature=self.temperature if "5" not in self.model_name else 1.0,
+        )
+
+        metadata = {
+            "input_tokens": completion.usage.prompt_tokens,
+            "output_tokens": completion.usage.completion_tokens,
+        }
+
+        return completion.choices[0].message.content #, metadata"""
+
+    def call_gpt(self, messages: list) -> (str, dict):
+        print(messages)
+        completion = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
                 temperature=self.temperature if "5" not in self.model_name else 1.0,
         )
 
@@ -50,10 +67,27 @@ class OpenAIModel(BaseModel):
         response = text[start:].strip()
         return response
 
-    def query(self, prompt: str) -> str:
+    """def query(self, prompt: str) -> str:
         for _ in range(self.max_retries):
             try:
                 return self.call_gpt(prompt)
+            except StopIteration:
+                print("Failed to get a response. Retrying...")
+
+        raise RuntimeError(f"Failed to query OpenAI after {self.max_retries} retries.")"""
+
+    def query(self, messages: list) -> str:
+        tmp_messages = deepcopy(messages)
+        for i in range(len(tmp_messages)):
+            if "text" in tmp_messages[i] and "sender" in tmp_messages[i]:
+                tmp_messages[i]["content"] = tmp_messages[i].pop("text")
+                tmp_messages[i]["role"] = tmp_messages[i].pop("sender")
+                if tmp_messages[i]["role"] == "bot":
+                    tmp_messages[i]["role"] = "assistant"
+
+        for _ in range(self.max_retries):
+            try:
+                return self.call_gpt(tmp_messages)
             except StopIteration:
                 print("Failed to get a response. Retrying...")
 
@@ -75,10 +109,18 @@ class OpenAIModel(BaseModel):
         print(result)
         return self.extract_result(result, "risposta finale: ") == "vai alla fase successiva"
 
-    def call_gpt_stream(self, prompt: str):
+    def call_gpt_stream(self, messages: list): #prompt: str):
+        tmp_messages = deepcopy(messages)
+        for i in range(len(tmp_messages)):
+            if "text" in tmp_messages[i] and "sender" in tmp_messages[i]:
+                tmp_messages[i]["content"] = tmp_messages[i].pop("text")
+                tmp_messages[i]["role"] = tmp_messages[i].pop("sender")
+                if tmp_messages[i]["role"] == "bot":
+                    tmp_messages[i]["role"] = "assistant"
+
         stream = self.client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=tmp_messages, #[{"role": "user", "content": prompt}],
             temperature=self.temperature if "5" not in self.model_name else 1.0,
             stream=True,
             # stream_options={"include_usage": True},  # optional; see note below

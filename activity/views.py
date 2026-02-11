@@ -571,7 +571,11 @@ def get_chat_stream(request):
                 else:
                     different_non_modifiable_output = False
             request.session.modified = True
+            #if next_interaction == "next":
             request.session["previous_interaction"] = None
+            #else:
+            #    request.session["previous_interaction"] = previous_interaction
+
             request.session["stage"] += 1
             request.session["num_interactions"] = 1
         else:
@@ -633,6 +637,7 @@ def get_chat_stream(request):
             session.modified = True
 
             # Build meta payload (this is what you had in the commented render)
+            print(session["messages"])
             messages_to_send = [{
                 "text": m["text"].replace("BOT: ", "").replace("USER: ", ""),
                 "sender": m["sender"],
