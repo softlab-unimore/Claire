@@ -225,11 +225,11 @@ class AgentFromCsv:
             #return messages, total_messages, -1
         elif interaction_name == "next":
             messages.append({
-                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\>
                 "sender": "system"
             })
             total_messages.append({
-                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\>
                 "sender": "system"
             })
         else:
