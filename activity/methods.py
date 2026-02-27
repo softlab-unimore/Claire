@@ -36,13 +36,19 @@ class OpenAIModel(BaseModel):
 
         return completion.choices[0].message.content #, metadata"""
 
-    def call_gpt(self, messages: list) -> (str, dict):
-        print(messages)
-        completion = self.client.chat.completions.create(
+    def call_gpt(self, messages: list, model_name: str = None) -> (str, dict):
+        if model_name is None:
+            completion = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=messages,
                 temperature=self.temperature if "5" not in self.model_name else 1.0,
-        )
+            )
+        else:
+            completion = self.client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=self.temperature if "5" not in model_name else 1.0,
+            )
 
         metadata = {
             "input_tokens": completion.usage.prompt_tokens,
@@ -76,7 +82,7 @@ class OpenAIModel(BaseModel):
 
         raise RuntimeError(f"Failed to query OpenAI after {self.max_retries} retries.")"""
 
-    def query(self, messages: list) -> str:
+    def query(self, messages: list, model_name: str = None) -> str:
         tmp_messages = deepcopy(messages)
         for i in range(len(tmp_messages)):
             if "text" in tmp_messages[i] and "sender" in tmp_messages[i]:
@@ -87,7 +93,7 @@ class OpenAIModel(BaseModel):
 
         for _ in range(self.max_retries):
             try:
-                return self.call_gpt(tmp_messages)
+                return self.call_gpt(tmp_messages, model_name)
             except StopIteration:
                 print("Failed to get a response. Retrying...")
 
@@ -109,7 +115,7 @@ class OpenAIModel(BaseModel):
         print(result)
         return self.extract_result(result, "risposta finale: ") == "vai alla fase successiva"
 
-    def call_gpt_stream(self, messages: list): #prompt: str):
+    def call_gpt_stream(self, messages: list, model_name: str = None): #prompt: str):
         tmp_messages = deepcopy(messages)
         for i in range(len(tmp_messages)):
             if "text" in tmp_messages[i] and "sender" in tmp_messages[i]:
@@ -118,13 +124,23 @@ class OpenAIModel(BaseModel):
                 if tmp_messages[i]["role"] == "bot":
                     tmp_messages[i]["role"] = "assistant"
 
-        stream = self.client.chat.completions.create(
-            model=self.model_name,
-            messages=tmp_messages, #[{"role": "user", "content": prompt}],
-            temperature=self.temperature if "5" not in self.model_name else 1.0,
-            stream=True,
-            # stream_options={"include_usage": True},  # optional; see note below
-        )
+        if model_name is None:
+            stream = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=tmp_messages, #[{"role": "user", "content": prompt}],
+                temperature=self.temperature if "5" not in self.model_name else 1.0,
+                stream=True,
+                # stream_options={"include_usage": True},  # optional; see note below
+            )
+        else:
+            stream = self.client.chat.completions.create(
+                model=model_name,
+                messages=tmp_messages, #[{"role": "user", "content": prompt}],
+                temperature=self.temperature if "5" not in model_name else 1.0,
+                stream=True,
+                # stream_options={"include_usage": True},  # optional; see note below
+            )
+
 
         for chunk in stream:
             # If you ever use include_usage=True, the last chunk may have choices=[]

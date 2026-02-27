@@ -89,7 +89,7 @@ class AgentFromCsv:
             non_modifiable_output = None
 
         if not streaming:
-            result = self.model.query(tmp_messages) #prompt)
+            result = self.model.query([msg for msg in tmp_messages[:-1] if msg["sender"] != "assistant" and msg["sender"] != "bot"] + [tmp_messages[-1]]) # TODO: remove this "hacky" correction for phase introduction  #prompt)
 
             messages.append({
                 "text": "BOT: "+result,
@@ -114,10 +114,26 @@ class AgentFromCsv:
 
         acc = []
 
+        print("NEW MESSAGE FOR PROMPT ENTRANCE")
+
+        msg_wo_bot, found = [], False
+        for msg in tmp_messages[::-1]:
+            if (msg["sender"] == "bot" or msg["sender"] == "assistant") and not found:
+                msg_wo_bot.append(msg)
+                found = True
+                continue
+            if (msg["sender"] == "bot" or msg["sender"] == "assistant") and found:
+                continue
+            msg_wo_bot.append(msg)
+
+        msg_wo_bot = msg_wo_bot[::-1]
+
+        print(msg_wo_bot)
         def token_gen():
             # IMPORTANT: you need a streaming iterator from your model
             # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
-            for chunk in self.model.call_gpt_stream(tmp_messages): #prompt):
+            
+            for chunk in self.model.call_gpt_stream(msg_wo_bot, model_name="gpt-4o-mini"): #tmp_messages): #prompt):
                 # chunk should be a string token/partial
                 if not chunk:
                     continue
@@ -225,11 +241,11 @@ class AgentFromCsv:
             #return messages, total_messages, -1
         elif interaction_name == "next":
             messages.append({
-                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\>
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
                 "sender": "system"
             })
             total_messages.append({
-                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\>
+                "text": "Devo rispondere che ho compreso ciò che ha detto, per poi concludere l'attività", # dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\".",
                 "sender": "system"
             })
         else:
@@ -242,7 +258,7 @@ class AgentFromCsv:
             }
             prompt = interaction_prompt.format(**attr)
             if end:
-                prompt += "\nAlla fine, devi finire il tuo messaggio concludendo l'attività. Devi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\"."
+                prompt += "\nAlla fine, devi finire il tuo messaggio concludendo l'attività." # Devi concludere l'attività dicendo qualcosa di simile a \"Congratulazioni, hai terminato l'attività!\"."
             messages.append({
                 "text": prompt,
                 "sender": "system"
@@ -277,7 +293,7 @@ class AgentFromCsv:
         def token_gen():
             # IMPORTANT: you need a streaming iterator from your model
             # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
-            for chunk in self.model.call_gpt_stream(tmp_messages): #prompt):
+            for chunk in self.model.call_gpt_stream(tmp_messages, model_name="gpt-4o-mini"): #prompt):
                 # chunk should be a string token/partial
                 if not chunk:
                     continue

@@ -598,6 +598,9 @@ def get_chat_stream(request):
     request.session["num_texts"] = agent.num_texts
     request.session.modified = True
 
+    print("Messages")
+    print(request.session["messages"])
+
     """def stream():
         # Optional: yield immediately to kick off rendering in some setups
         yield ""
