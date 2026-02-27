@@ -10,6 +10,32 @@
     <link rel="stylesheet" href="{% static 'activity/style.css' %}">
 </head>
 
+<style>
+
+.list-item-right{
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.delete-bin {
+  position: static;     /* instead of absolute */
+  transform: none;      /* remove translateY */
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 50%;
+  transition: background 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+</style>
+
 <body>
 
     <aside class="sidebar">
@@ -39,11 +65,38 @@
                       {{ username.1 }}, {{ username.2 }}
                     </div>
 
-                    {% if role == "2" and username.2 != "Insegnante" or role == "1" and username.1 == requester_username %}
+                    <!--{% if role == "2" and username.2 != "Insegnante" or role == "1" and username.1 == requester_username %}
                       <div class="list-item-right">
                         <a href="{% url 'student_chat' username.0 group_id %}" class="btn-student-chat">
                           Visualizza chat studente
                         </a>
+                      </div>
+                    {% endif %}
+
+                    {% if role == "2" %}
+                    <span class="delete-bin" title="Elimina" onclick="openDeleteModal(event, {{ username.0 }}, {{ group_id }})" role="button" aria-label="Elimina studente da classe">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                      </svg>
+                    </span>
+                    {% endif %}-->
+                    {% if role == "2" and username.2 != "Insegnante" or role == "1" and username.1 == requester_username or role == "2" %}
+                      <div class="list-item-right">
+                        {% if role == "2" and username.2 != "Insegnante" or role == "1" and username.1 == requester_username %}
+                          <a href="{% url 'student_chat' username.0 group_id %}" class="btn-student-chat">
+                            Visualizza chat studente
+                          </a>
+                        {% endif %}
+
+                        {% if role == "2" and username.2 != "Insegnante" %}
+                          <span class="delete-bin" title="Elimina"
+                                onclick="openDeleteModal(event, {{ username.0 }}, {{ group_id }})"
+                                role="button" aria-label="Elimina studente da classe">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <path d="M6 19c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                          </span>
+                        {% endif %}
                       </div>
                     {% endif %}
                   </div>
@@ -62,6 +115,72 @@
             <button class="button-secondary">Annulla</button>
         </a>
     </main>
+
+    <!-- Confirmation modal (hidden by default) -->
+    <div id="deleteModalOverlay" class="delete-modal-overlay" onclick="closeDeleteModal()">
+      <div class="delete-modal" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle" onclick="event.stopPropagation()">
+        <h2 id="deleteModalTitle">Sei sicuro?</h2>
+        <p>L'eliminazione dello studente dalla classe non è reversibile. L'azione cancellerà definitivamente tutti i dati dello studente associati alla classe, come le attività svolte.</p>
+
+        <form id="deleteForm" method="POST" action="{% url 'delete_student' %}">
+          {% csrf_token %}
+          <!-- default empty value; will be set by JS -->
+          <input type="hidden" name="user_id" id="deleteUserId" value="">
+          <input type="hidden" name="group_id" id="deleteGroupId" value="">
+          <div class="modal-actions">
+            <button type="button" class="modal-button annulla" onclick="closeDeleteModal()">Annulla</button>
+            <button type="submit" id="procediButton" class="modal-button procedi">Procedi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+<script>
+    function openDeleteModal(event, userId, groupId) {
+  if (event) {
+    try { event.stopPropagation(); event.preventDefault(); } catch (err) {}
+  }
+  var overlay = document.getElementById('deleteModalOverlay');
+  var input = document.getElementById('deleteUserId');
+  var group = document.getElementById('deleteGroupId');
+
+  var procedi = document.getElementById('procediButton');
+
+  if (userId === null || userId === undefined || userId === '') {
+    input.value = '';
+    group.value = '';
+    procedi.setAttribute('disabled', 'disabled');
+  } else {
+    input.value = String(userId);
+    group.value = String(groupId)
+    procedi.removeAttribute('disabled');
+  }
+
+  overlay.classList.add('open');
+  var cancelBtn = document.querySelector('.modal-button.annulla');
+  if (cancelBtn) cancelBtn.focus();
+}
+
+// Close the modal without action
+function closeDeleteModal() {
+  var overlay = document.getElementById('deleteModalOverlay');
+  overlay.classList.remove('open');
+}
+
+// Prevent form submission if group_id is empty (safety)
+document.addEventListener('DOMContentLoaded', function(){
+  var deleteForm = document.getElementById('deleteForm');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', function(e){
+      var input = document.getElementById('deleteUserId');
+      if (!input.value) {
+        e.preventDefault();
+        closeDeleteModal();
+      }
+    });
+  }
+});
+</script>
 
 </body>
 </html>

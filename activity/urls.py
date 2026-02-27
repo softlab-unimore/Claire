@@ -15,6 +15,7 @@ urlpatterns = [
    path("get_chat", views.get_chat_stream, name="chat"),
    path('download-messages/', views.download_total_messages, name='download_total_messages'),
    path('delete_class', views.delete_class, name='delete_class'),
+   path('delete_student', views.delete_student, name='delete_student'),
    path('delete_activity', views.delete_activity, name='delete_activity'),
    path('student_chat/<int:user_id>/<int:group_id>/', views.get_student_chat, name='student_chat'),
 ] + static(settings.STATIC_URL_BASE, document_root=settings.STATIC_ROOT)

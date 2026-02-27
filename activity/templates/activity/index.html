@@ -61,7 +61,7 @@
         <h2 id="deleteModalTitle">Sei sicuro?</h2>
         <p>L'eliminazione della classe non è reversibile. L'azione cancellerà definitivamente tutti i dati associati alla classe.</p>
 
-        <form id="deleteForm" method="POST" action="{% url 'delete_class' %}">
+        <form id="deleteForm" method="POST" action="{% url 'delete_student' %}">
           {% csrf_token %}
           <!-- default empty value; will be set by JS -->
           <input type="hidden" name="group_id" id="deleteGroupId" value="">

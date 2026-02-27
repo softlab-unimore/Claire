@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 from .forms import LoginForm, RegistrationForm, CreateClass, JoinClass, GetActivityForm, PostActivityForm
-from .models import Group, Activity, Dataset, UserActivity
+from .models import Group, Activity, Dataset, UserActivity, UserProfile
 from .methods import openaimodel
 from .agent_from_csv import AgentFromCsv
 
@@ -689,9 +689,26 @@ def delete_class(request):
         return redirect(index)
     group_id = request.POST.get('group_id')
     group = get_object_or_404(Group, id=group_id)
-    if request.user.userprofile not in group.userprofiles.all() and request.user.userprofile.role != "teacher":
+    if request.user.userprofile not in group.userprofiles.all() and request.user.userprofile.role != 2:
          return HttpResponseForbidden("You are not allowed to delete this class.")
     group.delete()
+    return redirect(index)
+
+@login_required
+def delete_student(request):
+    if request.method != "POST":
+        return redirect(index)
+    user_id = request.POST.get('user_id')
+    user = get_object_or_404(UserProfile, id=user_id)
+    group_id = request.POST.get('group_id')
+    group = get_object_or_404(Group, id=group_id)
+    if request.user.userprofile not in group.userprofiles.all() and request.user.userprofile.role != "2":
+         return HttpResponseForbidden("You are not allowed to delete this class.")
+
+    if user.role != "1":
+        return HttpResponseForbidden("You can only remove students.")
+
+    group.userprofiles.remove(user)
     return redirect(index)
 
 @login_required
