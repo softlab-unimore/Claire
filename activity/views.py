@@ -560,10 +560,13 @@ def get_chat_stream(request):
                     useractivity.criteria_excel = excel_bytes
                     useractivity.save()
             else:
-                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, criteria=criteria, skip=True)
-                if previous_interaction != -1:
-                    request.session["messages"] = request.session["messages"][:-1]
-                    request.session["messages"].append(request.session["total_messages"][-2])
+                request.session["messages"], request.session["total_messages"], previous_interaction = agent.apply_interaction(request.session["stage"], request.session["messages"], request.session["total_messages"], next_interaction, activity, criteria=criteria, skip=False, streaming=False) #True
+                print("IN BEFORE PHASE")
+                print(request.session["messages"])
+                # TODO: if you want to re-add the unique response interaction + phase integration, uncomment the following lines and put skip=True above
+                #if previous_interaction != -1:
+                #    request.session["messages"] = request.session["messages"][:-1]
+                #    request.session["messages"].append(request.session["total_messages"][-2])
                 token_iter, finalize, non_modifiable_output = agent.apply_phase(request.session["stage"]+1, request.session["messages"], request.session["total_messages"], activity=activity, streaming=True)
 
                 if "non_modifiable_output" in request.session and non_modifiable_output.lower().strip() != request.session["non_modifiable_output"].lower().strip():
@@ -637,6 +640,8 @@ def get_chat_stream(request):
         finally:
             # Finalize persisted state
             session["messages"], session["total_messages"] = finalize()
+            print("IN STREAM")
+            print(session["messages"])
             session.modified = True
 
             # Build meta payload (this is what you had in the commented render)

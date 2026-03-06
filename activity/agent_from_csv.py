@@ -1,4 +1,6 @@
 import os
+import time
+
 import pandas as pd
 import io
 
@@ -83,6 +85,11 @@ class AgentFromCsv:
         if messages[-1]["sender"] == "system":
             messages = messages[:-1]
 
+        last_msg = ""
+        if messages and messages[-1]["sender"] == "bot":
+            last_msg = messages[-1]["text"].replace("BOT: ", "")
+            messages = messages[:-1]
+
         if phase_row["Input non modificabile"] != "":
             non_modifiable_output = phase_row["Input non modificabile"]
         else:
@@ -112,16 +119,16 @@ class AgentFromCsv:
 
             return messages, total_messages, non_modifiable_output
 
-        acc = []
+        acc, acc2 = [], []
 
         print("NEW MESSAGE FOR PROMPT ENTRANCE")
 
         msg_wo_bot, found = [], False
         for msg in tmp_messages[::-1]:
-            if (msg["sender"] == "bot" or msg["sender"] == "assistant") and not found:
+            """if (msg["sender"] == "bot" or msg["sender"] == "assistant") and not found:
                 msg_wo_bot.append(msg)
                 found = True
-                continue
+                continue"""
             if (msg["sender"] == "bot" or msg["sender"] == "assistant") and found:
                 continue
             msg_wo_bot.append(msg)
@@ -129,22 +136,36 @@ class AgentFromCsv:
         msg_wo_bot = msg_wo_bot[::-1]
 
         print(msg_wo_bot)
-        def token_gen():
+        def token_gen(last_msg=last_msg):
             # IMPORTANT: you need a streaming iterator from your model
             # e.g. self.model.query(prompt, stream=True) or self.model.query_stream(prompt)
-            
+            for el in last_msg.split():
+                if el.strip() == "BOT:":
+                    continue
+                acc.append(el+" ")
+                time.sleep(0.05)
+                yield el+" "
+
+            if last_msg:
+                acc.append("\n\n")
+                yield "\n\n"
+
             for chunk in self.model.call_gpt_stream(msg_wo_bot, model_name="gpt-4o-mini"): #tmp_messages): #prompt):
                 # chunk should be a string token/partial
+                print(chunk)
                 if not chunk:
                     continue
                 acc.append(chunk)
                 yield chunk
 
-        def finalize(non_modifiable_output=non_modifiable_output):
+        def finalize(messages=messages, non_modifiable_output=non_modifiable_output):
             result = "".join(acc)
             bot_text = result #"BOT: " + result
+            #messages = messages[:-1]
             messages.append({"text": bot_text, "sender": "bot"})
             total_messages.append({"text": bot_text, "sender": "bot"})
+            print("IN FINALIZE")
+            print(bot_text)
 
             if non_modifiable_output is not None:
                 messages.append({"text": non_modifiable_output, "sender": "system"})
