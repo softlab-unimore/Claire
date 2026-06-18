@@ -6,7 +6,7 @@
 
 This is the repository of the paper *"CLAIRE: a Controllable LLM Tutoring Framework for Reading Comprehension"*, **accepted at AIED 2026** (**A**rtificial **I**ntelligence in **ED**ucation).  
 Claire is a teacher-configurable framework that operationalizes guided reading by decomposing the pedagogical procedure into four components, i.e., pedagogical phases, interaction moves, assessment criteria, and transition logic, authored by teachers and executed at runtime through a structured multi-agent dialogue controller.
-The preprint paper is available at [this link](https://github.com/softlab-unimore/Claire/blob/master/claire_paper.pdf).
+The preprint paper is available at [this link](https://github.com/softlab-unimore/Claire/blob/master/claire_paper.pdf) (This preprint has not undergone peer review or any post-submission improvements or corrections. The Version of Record of this contribution is published in AIED 2026, and is available online at https://doi.org/) (doi to be specified yet).
 
 # How to run Claire
 
